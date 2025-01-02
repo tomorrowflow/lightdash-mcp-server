@@ -6,6 +6,7 @@ import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { createLightdashClient } from '@syucream/lightdash-client-typescript-fetch';
 import { z } from 'zod';
+import { zodToJsonSchema } from 'zod-to-json-schema';
 
 // Initialize Lightdash API client
 const lightdashClient = createLightdashClient(
@@ -56,27 +57,27 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       {
         name: 'list_projects',
         description: 'List all projects in the Lightdash organization',
-        inputSchema: ListProjectsSchema,
+        inputSchema: zodToJsonSchema(ListProjectsSchema),
       },
       {
         name: 'get_project',
         description: 'Get details of a specific project',
-        inputSchema: GetProjectSchema,
+        inputSchema: zodToJsonSchema(GetProjectSchema),
       },
       {
         name: 'list_spaces',
         description: 'List all spaces in a project',
-        inputSchema: ListSpacesSchema,
+        inputSchema: zodToJsonSchema(ListSpacesSchema),
       },
       {
         name: 'list_charts',
         description: 'List all charts in a project',
-        inputSchema: ListChartsSchema,
+        inputSchema: zodToJsonSchema(ListChartsSchema),
       },
       {
         name: 'list_dashboards',
         description: 'List all dashboards in a project',
-        inputSchema: ListDashboardsSchema,
+        inputSchema: zodToJsonSchema(ListDashboardsSchema),
       },
     ],
   };
