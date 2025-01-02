@@ -5,8 +5,14 @@ import {
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { createLightdashClient } from '@syucream/lightdash-client-typescript-fetch';
-import { z } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
+import {
+  ListProjectsSchema,
+  GetProjectSchema,
+  ListSpacesSchema,
+  ListChartsSchema,
+  ListDashboardsSchema,
+} from './schemas.js';
 
 // Initialize Lightdash API client
 const lightdashClient = createLightdashClient(
@@ -18,30 +24,11 @@ const lightdashClient = createLightdashClient(
   }
 );
 
-// Define tool input schemas
-const ListProjectsSchema = z.object({});
-
-const GetProjectSchema = z.object({
-  projectUuid: z.string(),
-});
-
-const ListSpacesSchema = z.object({
-  projectUuid: z.string(),
-});
-
-const ListChartsSchema = z.object({
-  projectUuid: z.string(),
-});
-
-const ListDashboardsSchema = z.object({
-  projectUuid: z.string(),
-});
-
 // Initialize MCP server
 const server = new Server(
   {
     name: 'lightdash-mcp-server',
-    version: '1.0.0',
+    version: '0.0.1',
   },
   {
     capabilities: {
