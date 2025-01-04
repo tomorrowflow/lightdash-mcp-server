@@ -13,6 +13,13 @@ This server provides MCP-compatible access to Lightdash's API, allowing AI assis
   - List spaces within a project
   - List charts within a project
   - List dashboards within a project
+- **Metrics and Analytics**
+  - Get custom metrics for a project
+  - Access project catalog data
+  - View metrics catalog
+- **Code Export**
+  - Export charts as code
+  - Export dashboards as code
 
 ## Quick Start
 
