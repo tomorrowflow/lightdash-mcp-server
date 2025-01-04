@@ -6,20 +6,18 @@ This server provides MCP-compatible access to Lightdash's API, allowing AI assis
 
 ## Features
 
-- **Project Management**
-  - List all projects in your Lightdash organization
-  - Get detailed information about specific projects
-- **Content Access**
-  - List spaces within a project
-  - List charts within a project
-  - List dashboards within a project
-- **Metrics and Analytics**
-  - Get custom metrics for a project
-  - Access project catalog data
-  - View metrics catalog
-- **Code Export**
-  - Export charts as code
-  - Export dashboards as code
+Available tools:
+
+- `list_projects` - List all projects in the Lightdash organization
+- `get_project` - Get details of a specific project
+- `list_spaces` - List all spaces in a project
+- `list_charts` - List all charts in a project
+- `list_dashboards` - List all dashboards in a project
+- `get_custom_metrics` - Get custom metrics for a project
+- `get_catalog` - Get catalog for a project
+- `get_metrics_catalog` - Get metrics catalog for a project
+- `get_charts_as_code` - Get charts as code for a project
+- `get_dashboards_as_code` - Get dashboards as code for a project
 
 ## Quick Start
 
