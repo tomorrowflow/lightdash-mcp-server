@@ -106,7 +106,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     switch (request.params.name) {
       case 'list_projects': {
         const { data, error } = await lightdashClient.GET(
-          '/api/v1/org/projects'
+          '/api/v1/org/projects',
+          {}
         );
         if (error) {
           throw new Error(
