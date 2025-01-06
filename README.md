@@ -24,7 +24,7 @@ Available tools:
 ### Installation
 
 ```bash
-npm install @syucream/lightdash-mcp-server
+npm install lightdash-mcp-server
 ```
 
 ### Configuration

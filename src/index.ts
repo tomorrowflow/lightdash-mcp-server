@@ -4,7 +4,7 @@ import {
 } from '@modelcontextprotocol/sdk/types.js';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { createLightdashClient } from '@syucream/lightdash-client-typescript-fetch';
+import { createLightdashClient } from 'lightdash-client-typescript-fetch';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 import {
   ListProjectsSchema,
