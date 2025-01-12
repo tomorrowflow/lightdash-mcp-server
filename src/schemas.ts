@@ -37,3 +37,15 @@ export const GetChartsAsCodeSchema = z.object({
 export const GetDashboardsAsCodeSchema = z.object({
   projectUuid: z.string(),
 });
+
+export const GetMetadataSchema = z.object({
+  projectUuid: z.string(),
+  table: z.string(),
+});
+
+export const GetAnalyticsSchema = z.object({
+  projectUuid: z.string(),
+  table: z.string(),
+});
+
+export const GetUserAttributesSchema = z.object({});

@@ -17,6 +17,9 @@ import {
   GetMetricsCatalogSchema,
   GetChartsAsCodeSchema,
   GetDashboardsAsCodeSchema,
+  GetMetadataSchema,
+  GetAnalyticsSchema,
+  GetUserAttributesSchema,
 } from './schemas.js';
 
 const lightdashClient = createLightdashClient(
@@ -92,6 +95,21 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         name: 'get_dashboards_as_code',
         description: 'Get dashboards as code for a project',
         inputSchema: zodToJsonSchema(GetDashboardsAsCodeSchema),
+      },
+      {
+        name: 'get_metadata',
+        description: 'Get metadata for a specific table in the data catalog',
+        inputSchema: zodToJsonSchema(GetMetadataSchema),
+      },
+      {
+        name: 'get_analytics',
+        description: 'Get analytics for a specific table in the data catalog',
+        inputSchema: zodToJsonSchema(GetAnalyticsSchema),
+      },
+      {
+        name: 'get_user_attributes',
+        description: 'Get organization user attributes',
+        inputSchema: zodToJsonSchema(GetUserAttributesSchema),
       },
     ],
   };
@@ -315,6 +333,82 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           {
             params: { path: { projectUuid: args.projectUuid } },
           }
+        );
+        if (error) {
+          throw new Error(
+            `Lightdash API error: ${error.error.name}, ${error.error.message ?? 'no message'}`
+          );
+        }
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(data.results, null, 2),
+            },
+          ],
+        };
+      }
+
+      case 'get_metadata': {
+        const args = GetMetadataSchema.parse(request.params.arguments);
+        const { data, error } = await lightdashClient.GET(
+          '/api/v1/projects/{projectUuid}/dataCatalog/{table}/metadata',
+          {
+            params: {
+              path: {
+                projectUuid: args.projectUuid,
+                table: args.table,
+              },
+            },
+          }
+        );
+        if (error) {
+          throw new Error(
+            `Lightdash API error: ${error.error.name}, ${error.error.message ?? 'no message'}`
+          );
+        }
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(data.results, null, 2),
+            },
+          ],
+        };
+      }
+
+      case 'get_analytics': {
+        const args = GetAnalyticsSchema.parse(request.params.arguments);
+        const { data, error } = await lightdashClient.GET(
+          '/api/v1/projects/{projectUuid}/dataCatalog/{table}/analytics',
+          {
+            params: {
+              path: {
+                projectUuid: args.projectUuid,
+                table: args.table,
+              },
+            },
+          }
+        );
+        if (error) {
+          throw new Error(
+            `Lightdash API error: ${error.error.name}, ${error.error.message ?? 'no message'}`
+          );
+        }
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(data.results, null, 2),
+            },
+          ],
+        };
+      }
+
+      case 'get_user_attributes': {
+        const { data, error } = await lightdashClient.GET(
+          '/api/v1/org/attributes',
+          {}
         );
         if (error) {
           throw new Error(
