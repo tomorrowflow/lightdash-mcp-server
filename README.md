@@ -4,6 +4,10 @@ A [MCP(Model Context Protocol)](https://www.anthropic.com/news/model-context-pro
 
 This server provides MCP-compatible access to Lightdash's API, allowing AI assistants to interact with your Lightdash data through a standardized interface.
 
+<a href="https://glama.ai/mcp/servers/e1gbb6sflq">
+  <img width="380" height="200" src="https://glama.ai/mcp/servers/e1gbb6sflq/badge" alt="Lightdash Server MCP server" />
+</a>
+
 ## Features
 
 Available tools:
