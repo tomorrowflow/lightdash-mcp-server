@@ -1,6 +1,6 @@
 {
   "name": "lightdash-mcp-server",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "A MCP(Model Context Protocol) server that accesses to lightdash( https://www.lightdash.com/ )",
   "main": "dist/index.js",
   "type": "module",
@@ -13,7 +13,7 @@
   ],
   "scripts": {
     "dev": "node --import ./ts-node-loader.js src/index.ts",
-    "build": "tsc -p tsconfig.build.json",
+    "build": "tsc -p tsconfig.build.json && shx chmod +x dist/*.js",
     "start": "node dist/index.js",
     "test": "echo \"No tests yet\"",
     "lint": "npm run lint:eslint && npm run lint:prettier",
@@ -57,6 +57,7 @@
     "eslint": "^9.17.0",
     "eslint-config-prettier": "^9.1.0",
     "prettier": "^3.4.2",
+    "shx": "^0.3.4",
     "ts-node": "^10.9.2"
   }
 }
