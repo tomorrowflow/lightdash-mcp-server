@@ -13,7 +13,7 @@ startCommand:
         description: The API key for accessing the Lightdash API.
       lightdashApiUrl:
         type: string
-        default: https://app.lightdash.cloud/api/v1
+        default: https://app.lightdash.cloud
         description: The base URL for the Lightdash API.
   commandFunction:
     # A function that produces the CLI command to start the MCP on stdio.

@@ -17,7 +17,7 @@ config();
 const apiKey = process.env.EXAMPLES_CLIENT_LIGHTDASH_API_KEY;
 const apiUrl =
   process.env.EXAMPLES_CLIENT_LIGHTDASH_API_URL ??
-  'https://app.lightdash.cloud/api/v1';
+  'https://app.lightdash.cloud';
 
 if (!apiKey) {
   throw new Error(
