@@ -34,7 +34,7 @@ Available tools:
 To install Lightdash MCP Server for Claude Desktop automatically via [Smithery](https://smithery.ai/server/@syucream/lightdash-mcp-server):
 
 ```bash
-npx -y @smithery/cli install @syucream/lightdash-mcp-server --client claude
+npx -y @smithery/cli install lightdash-mcp-server --client claude
 ```
 
 #### Manual Installation
@@ -53,19 +53,29 @@ LIGHTDASH_API_URL=https://app.lightdash.cloud/api/v1  # or your custom Lightdash
 
 ### Usage
 
-1. Start the MCP server:
+1. Start the MCP server.
+
+Directly:
 ```bash
 npx lightdash-mcp-server
 ```
+Or, run the installed module with node.
 
-2. For example usage, check the `examples` directory. To run the example:
-```bash
-# Set required environment variables
-export EXAMPLES_CLIENT_LIGHTDASH_API_KEY=your_api_key
-export EXAMPLES_CLIENT_LIGHTDASH_PROJECT_UUID=your_project_uuid
-
-# Run the example
-npm run examples
+2. Edit your MCP configuration json:
+```json
+...
+    "lightdash": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "lightdash-mcp-server"
+      ],
+      "env": {
+        "LIGHTDASH_API_KEY": "<your PAT>",
+        "LIGHTDASH_API_URL": "https://<your base url>"
+      }
+    },
+...
 ```
 
 ## Development
