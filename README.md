@@ -48,7 +48,7 @@ Create a `.env` file with your Lightdash API credentials:
 
 ```env
 LIGHTDASH_API_KEY=your_api_key
-LIGHTDASH_API_URL=https://app.lightdash.cloud/api/v1  # or your custom Lightdash instance URL
+LIGHTDASH_API_URL=https://app.lightdash.cloud  # or your custom Lightdash instance URL
 ```
 
 ### Usage
