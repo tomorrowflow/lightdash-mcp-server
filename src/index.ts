@@ -49,67 +49,67 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
   return {
     tools: [
       {
-        name: 'list_projects',
+        name: 'lightdash_list_projects',
         description: 'List all projects in the Lightdash organization',
         inputSchema: zodToJsonSchema(ListProjectsSchema),
       },
       {
-        name: 'get_project',
+        name: 'lightdash_get_project',
         description: 'Get details of a specific project',
         inputSchema: zodToJsonSchema(GetProjectSchema),
       },
       {
-        name: 'list_spaces',
+        name: 'lightdash_list_spaces',
         description: 'List all spaces in a project',
         inputSchema: zodToJsonSchema(ListSpacesSchema),
       },
       {
-        name: 'list_charts',
+        name: 'lightdash_list_charts',
         description: 'List all charts in a project',
         inputSchema: zodToJsonSchema(ListChartsSchema),
       },
       {
-        name: 'list_dashboards',
+        name: 'lightdash_list_dashboards',
         description: 'List all dashboards in a project',
         inputSchema: zodToJsonSchema(ListDashboardsSchema),
       },
       {
-        name: 'get_custom_metrics',
+        name: 'lightdash_get_custom_metrics',
         description: 'Get custom metrics for a project',
         inputSchema: zodToJsonSchema(GetCustomMetricsSchema),
       },
       {
-        name: 'get_catalog',
+        name: 'lightdash_get_catalog',
         description: 'Get catalog for a project',
         inputSchema: zodToJsonSchema(GetCatalogSchema),
       },
       {
-        name: 'get_metrics_catalog',
+        name: 'lightdash_get_metrics_catalog',
         description: 'Get metrics catalog for a project',
         inputSchema: zodToJsonSchema(GetMetricsCatalogSchema),
       },
       {
-        name: 'get_charts_as_code',
+        name: 'lightdash_get_charts_as_code',
         description: 'Get charts as code for a project',
         inputSchema: zodToJsonSchema(GetChartsAsCodeSchema),
       },
       {
-        name: 'get_dashboards_as_code',
+        name: 'lightdash_get_dashboards_as_code',
         description: 'Get dashboards as code for a project',
         inputSchema: zodToJsonSchema(GetDashboardsAsCodeSchema),
       },
       {
-        name: 'get_metadata',
+        name: 'lightdash_get_metadata',
         description: 'Get metadata for a specific table in the data catalog',
         inputSchema: zodToJsonSchema(GetMetadataSchema),
       },
       {
-        name: 'get_analytics',
+        name: 'lightdash_get_analytics',
         description: 'Get analytics for a specific table in the data catalog',
         inputSchema: zodToJsonSchema(GetAnalyticsSchema),
       },
       {
-        name: 'get_user_attributes',
+        name: 'lightdash_get_user_attributes',
         description: 'Get organization user attributes',
         inputSchema: zodToJsonSchema(GetUserAttributesSchema),
       },
