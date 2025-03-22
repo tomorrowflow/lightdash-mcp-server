@@ -73,7 +73,7 @@ async function main() {
 
     const response = (await client.callTool(
       {
-        name: 'list_spaces',
+        name: 'lightdash_list_spaces',
         arguments: {
           projectUuid,
         },

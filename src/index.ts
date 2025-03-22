@@ -124,7 +124,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     }
 
     switch (request.params.name) {
-      case 'list_projects': {
+      case 'lightdash_list_projects': {
         const { data, error } = await lightdashClient.GET(
           '/api/v1/org/projects',
           {}
@@ -144,7 +144,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         };
       }
 
-      case 'get_project': {
+      case 'lightdash_get_project': {
         const args = GetProjectSchema.parse(request.params.arguments);
         const { data, error } = await lightdashClient.GET(
           '/api/v1/projects/{projectUuid}',
@@ -167,7 +167,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         };
       }
 
-      case 'list_spaces': {
+      case 'lightdash_list_spaces': {
         const args = ListSpacesSchema.parse(request.params.arguments);
         const { data, error } = await lightdashClient.GET(
           '/api/v1/projects/{projectUuid}/spaces',
@@ -190,7 +190,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         };
       }
 
-      case 'list_charts': {
+      case 'lightdash_list_charts': {
         const args = ListChartsSchema.parse(request.params.arguments);
         const { data, error } = await lightdashClient.GET(
           '/api/v1/projects/{projectUuid}/charts',
@@ -213,7 +213,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         };
       }
 
-      case 'list_dashboards': {
+      case 'lightdash_list_dashboards': {
         const args = ListDashboardsSchema.parse(request.params.arguments);
         const { data, error } = await lightdashClient.GET(
           '/api/v1/projects/{projectUuid}/dashboards',
@@ -236,7 +236,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         };
       }
 
-      case 'get_custom_metrics': {
+      case 'lightdash_get_custom_metrics': {
         const args = GetCustomMetricsSchema.parse(request.params.arguments);
         const { data, error } = await lightdashClient.GET(
           '/api/v1/projects/{projectUuid}/custom-metrics',
@@ -259,7 +259,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         };
       }
 
-      case 'get_catalog': {
+      case 'lightdash_get_catalog': {
         const args = GetCatalogSchema.parse(request.params.arguments);
         const { data, error } = await lightdashClient.GET(
           '/api/v1/projects/{projectUuid}/dataCatalog',
@@ -282,7 +282,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         };
       }
 
-      case 'get_metrics_catalog': {
+      case 'lightdash_get_metrics_catalog': {
         const args = GetMetricsCatalogSchema.parse(request.params.arguments);
         const { data, error } = await lightdashClient.GET(
           '/api/v1/projects/{projectUuid}/dataCatalog/metrics',
@@ -305,7 +305,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         };
       }
 
-      case 'get_charts_as_code': {
+      case 'lightdash_get_charts_as_code': {
         const args = GetChartsAsCodeSchema.parse(request.params.arguments);
         const { data, error } = await lightdashClient.GET(
           '/api/v1/projects/{projectUuid}/charts/code',
@@ -328,7 +328,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         };
       }
 
-      case 'get_dashboards_as_code': {
+      case 'lightdash_get_dashboards_as_code': {
         const args = GetDashboardsAsCodeSchema.parse(request.params.arguments);
         const { data, error } = await lightdashClient.GET(
           '/api/v1/projects/{projectUuid}/dashboards/code',
@@ -351,7 +351,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         };
       }
 
-      case 'get_metadata': {
+      case 'lightdash_get_metadata': {
         const args = GetMetadataSchema.parse(request.params.arguments);
         const { data, error } = await lightdashClient.GET(
           '/api/v1/projects/{projectUuid}/dataCatalog/{table}/metadata',
@@ -379,7 +379,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         };
       }
 
-      case 'get_analytics': {
+      case 'lightdash_get_analytics': {
         const args = GetAnalyticsSchema.parse(request.params.arguments);
         const { data, error } = await lightdashClient.GET(
           '/api/v1/projects/{projectUuid}/dataCatalog/{table}/analytics',
@@ -407,7 +407,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         };
       }
 
-      case 'get_user_attributes': {
+      case 'lightdash_get_user_attributes': {
         const { data, error } = await lightdashClient.GET(
           '/api/v1/org/attributes',
           {}
