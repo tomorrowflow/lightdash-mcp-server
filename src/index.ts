@@ -119,8 +119,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
 
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   try {
-    if (!request.params.arguments) {
-      throw new Error('Arguments are required');
+    if (!request.params) {
+      throw new Error('Params are required');
     }
 
     switch (request.params.name) {
