@@ -13,6 +13,7 @@
   ],
   "scripts": {
     "dev": "node --import ./ts-node-loader.js src/index.ts",
+    "dev:http": "node --import ./ts-node-loader.js src/index.ts -port 8080",
     "build": "tsc -p tsconfig.build.json && shx chmod +x dist/*.js",
     "start": "node dist/index.js",
     "test": "echo \"No tests yet\"",
@@ -40,7 +41,7 @@
   },
   "homepage": "https://github.com/syucream/lightdash-mcp-server#readme",
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.0.4",
+    "@modelcontextprotocol/sdk": "^1.11.4",
     "@types/express": "^5.0.0",
     "@types/node": "^22.10.3",
     "dotenv": "^16.4.7",

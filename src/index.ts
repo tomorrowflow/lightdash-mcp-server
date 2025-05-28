@@ -3,8 +3,10 @@
 import {
   ListToolsRequestSchema,
   CallToolRequestSchema,
+  type CallToolRequest,
 } from '@modelcontextprotocol/sdk/types.js';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
+import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { createLightdashClient } from 'lightdash-client-typescript-fetch';
 import { zodToJsonSchema } from 'zod-to-json-schema';
@@ -23,6 +25,8 @@ import {
   GetAnalyticsSchema,
   GetUserAttributesSchema,
 } from './schemas.js';
+import crypto from 'crypto';
+import { startHttpServer } from './server.js';
 
 const lightdashClient = createLightdashClient(
   process.env.LIGHTDASH_API_URL || 'https://app.lightdash.cloud',
@@ -117,334 +121,369 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
   };
 });
 
-server.setRequestHandler(CallToolRequestSchema, async (request) => {
-  try {
-    if (!request.params) {
-      throw new Error('Params are required');
-    }
-
-    switch (request.params.name) {
-      case 'lightdash_list_projects': {
-        const { data, error } = await lightdashClient.GET(
-          '/api/v1/org/projects',
-          {}
-        );
-        if (error) {
-          throw new Error(
-            `Lightdash API error: ${error.error.name}, ${error.error.message ?? 'no message'}`
-          );
-        }
-        return {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify(data.results, null, 2),
-            },
-          ],
-        };
+server.setRequestHandler(
+  CallToolRequestSchema,
+  async (request: CallToolRequest) => {
+    try {
+      if (!request.params) {
+        throw new Error('Params are required');
       }
 
-      case 'lightdash_get_project': {
-        const args = GetProjectSchema.parse(request.params.arguments);
-        const { data, error } = await lightdashClient.GET(
-          '/api/v1/projects/{projectUuid}',
-          {
-            params: { path: { projectUuid: args.projectUuid } },
+      switch (request.params.name) {
+        case 'lightdash_list_projects': {
+          const { data, error } = await lightdashClient.GET(
+            '/api/v1/org/projects',
+            {}
+          );
+          if (error) {
+            throw new Error(
+              `Lightdash API error: ${error.error.name}, ${error.error.message ?? 'no message'}`
+            );
           }
-        );
-        if (error) {
-          throw new Error(
-            `Lightdash API error: ${error.error.name}, ${error.error.message ?? 'no message'}`
-          );
-        }
-        return {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify(data.results, null, 2),
-            },
-          ],
-        };
-      }
-
-      case 'lightdash_list_spaces': {
-        const args = ListSpacesSchema.parse(request.params.arguments);
-        const { data, error } = await lightdashClient.GET(
-          '/api/v1/projects/{projectUuid}/spaces',
-          {
-            params: { path: { projectUuid: args.projectUuid } },
-          }
-        );
-        if (error) {
-          throw new Error(
-            `Lightdash API error: ${error.error.name}, ${error.error.message ?? 'no message'}`
-          );
-        }
-        return {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify(data.results, null, 2),
-            },
-          ],
-        };
-      }
-
-      case 'lightdash_list_charts': {
-        const args = ListChartsSchema.parse(request.params.arguments);
-        const { data, error } = await lightdashClient.GET(
-          '/api/v1/projects/{projectUuid}/charts',
-          {
-            params: { path: { projectUuid: args.projectUuid } },
-          }
-        );
-        if (error) {
-          throw new Error(
-            `Lightdash API error: ${error.error.name}, ${error.error.message ?? 'no message'}`
-          );
-        }
-        return {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify(data.results, null, 2),
-            },
-          ],
-        };
-      }
-
-      case 'lightdash_list_dashboards': {
-        const args = ListDashboardsSchema.parse(request.params.arguments);
-        const { data, error } = await lightdashClient.GET(
-          '/api/v1/projects/{projectUuid}/dashboards',
-          {
-            params: { path: { projectUuid: args.projectUuid } },
-          }
-        );
-        if (error) {
-          throw new Error(
-            `Lightdash API error: ${error.error.name}, ${error.error.message ?? 'no message'}`
-          );
-        }
-        return {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify(data.results, null, 2),
-            },
-          ],
-        };
-      }
-
-      case 'lightdash_get_custom_metrics': {
-        const args = GetCustomMetricsSchema.parse(request.params.arguments);
-        const { data, error } = await lightdashClient.GET(
-          '/api/v1/projects/{projectUuid}/custom-metrics',
-          {
-            params: { path: { projectUuid: args.projectUuid } },
-          }
-        );
-        if (error) {
-          throw new Error(
-            `Lightdash API error: ${error.error.name}, ${error.error.message ?? 'no message'}`
-          );
-        }
-        return {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify(data.results, null, 2),
-            },
-          ],
-        };
-      }
-
-      case 'lightdash_get_catalog': {
-        const args = GetCatalogSchema.parse(request.params.arguments);
-        const { data, error } = await lightdashClient.GET(
-          '/api/v1/projects/{projectUuid}/dataCatalog',
-          {
-            params: { path: { projectUuid: args.projectUuid } },
-          }
-        );
-        if (error) {
-          throw new Error(
-            `Lightdash API error: ${error.error.name}, ${error.error.message ?? 'no message'}`
-          );
-        }
-        return {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify(data.results, null, 2),
-            },
-          ],
-        };
-      }
-
-      case 'lightdash_get_metrics_catalog': {
-        const args = GetMetricsCatalogSchema.parse(request.params.arguments);
-        const { data, error } = await lightdashClient.GET(
-          '/api/v1/projects/{projectUuid}/dataCatalog/metrics',
-          {
-            params: { path: { projectUuid: args.projectUuid } },
-          }
-        );
-        if (error) {
-          throw new Error(
-            `Lightdash API error: ${error.error.name}, ${error.error.message ?? 'no message'}`
-          );
-        }
-        return {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify(data.results, null, 2),
-            },
-          ],
-        };
-      }
-
-      case 'lightdash_get_charts_as_code': {
-        const args = GetChartsAsCodeSchema.parse(request.params.arguments);
-        const { data, error } = await lightdashClient.GET(
-          '/api/v1/projects/{projectUuid}/charts/code',
-          {
-            params: { path: { projectUuid: args.projectUuid } },
-          }
-        );
-        if (error) {
-          throw new Error(
-            `Lightdash API error: ${error.error.name}, ${error.error.message ?? 'no message'}`
-          );
-        }
-        return {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify(data.results, null, 2),
-            },
-          ],
-        };
-      }
-
-      case 'lightdash_get_dashboards_as_code': {
-        const args = GetDashboardsAsCodeSchema.parse(request.params.arguments);
-        const { data, error } = await lightdashClient.GET(
-          '/api/v1/projects/{projectUuid}/dashboards/code',
-          {
-            params: { path: { projectUuid: args.projectUuid } },
-          }
-        );
-        if (error) {
-          throw new Error(
-            `Lightdash API error: ${error.error.name}, ${error.error.message ?? 'no message'}`
-          );
-        }
-        return {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify(data.results, null, 2),
-            },
-          ],
-        };
-      }
-
-      case 'lightdash_get_metadata': {
-        const args = GetMetadataSchema.parse(request.params.arguments);
-        const { data, error } = await lightdashClient.GET(
-          '/api/v1/projects/{projectUuid}/dataCatalog/{table}/metadata',
-          {
-            params: {
-              path: {
-                projectUuid: args.projectUuid,
-                table: args.table,
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(data.results, null, 2),
               },
-            },
-          }
-        );
-        if (error) {
-          throw new Error(
-            `Lightdash API error: ${error.error.name}, ${error.error.message ?? 'no message'}`
-          );
+            ],
+          };
         }
-        return {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify(data.results, null, 2),
-            },
-          ],
-        };
-      }
 
-      case 'lightdash_get_analytics': {
-        const args = GetAnalyticsSchema.parse(request.params.arguments);
-        const { data, error } = await lightdashClient.GET(
-          '/api/v1/projects/{projectUuid}/dataCatalog/{table}/analytics',
-          {
-            params: {
-              path: {
-                projectUuid: args.projectUuid,
-                table: args.table,
+        case 'lightdash_get_project': {
+          const args = GetProjectSchema.parse(request.params.arguments);
+          const { data, error } = await lightdashClient.GET(
+            '/api/v1/projects/{projectUuid}',
+            {
+              params: { path: { projectUuid: args.projectUuid } },
+            }
+          );
+          if (error) {
+            throw new Error(
+              `Lightdash API error: ${error.error.name}, ${error.error.message ?? 'no message'}`
+            );
+          }
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(data.results, null, 2),
               },
-            },
+            ],
+          };
+        }
+
+        case 'lightdash_list_spaces': {
+          const args = ListSpacesSchema.parse(request.params.arguments);
+          const { data, error } = await lightdashClient.GET(
+            '/api/v1/projects/{projectUuid}/spaces',
+            {
+              params: { path: { projectUuid: args.projectUuid } },
+            }
+          );
+          if (error) {
+            throw new Error(
+              `Lightdash API error: ${error.error.name}, ${error.error.message ?? 'no message'}`
+            );
           }
-        );
-        if (error) {
-          throw new Error(
-            `Lightdash API error: ${error.error.name}, ${error.error.message ?? 'no message'}`
-          );
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(data.results, null, 2),
+              },
+            ],
+          };
         }
-        return {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify(data.results, null, 2),
-            },
-          ],
-        };
-      }
 
-      case 'lightdash_get_user_attributes': {
-        const { data, error } = await lightdashClient.GET(
-          '/api/v1/org/attributes',
-          {}
-        );
-        if (error) {
-          throw new Error(
-            `Lightdash API error: ${error.error.name}, ${error.error.message ?? 'no message'}`
+        case 'lightdash_list_charts': {
+          const args = ListChartsSchema.parse(request.params.arguments);
+          const { data, error } = await lightdashClient.GET(
+            '/api/v1/projects/{projectUuid}/charts',
+            {
+              params: { path: { projectUuid: args.projectUuid } },
+            }
           );
+          if (error) {
+            throw new Error(
+              `Lightdash API error: ${error.error.name}, ${error.error.message ?? 'no message'}`
+            );
+          }
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(data.results, null, 2),
+              },
+            ],
+          };
         }
-        return {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify(data.results, null, 2),
-            },
-          ],
-        };
-      }
 
-      default:
-        throw new Error(`Unknown tool: ${request.params.name}`);
+        case 'lightdash_list_dashboards': {
+          const args = ListDashboardsSchema.parse(request.params.arguments);
+          const { data, error } = await lightdashClient.GET(
+            '/api/v1/projects/{projectUuid}/dashboards',
+            {
+              params: { path: { projectUuid: args.projectUuid } },
+            }
+          );
+          if (error) {
+            throw new Error(
+              `Lightdash API error: ${error.error.name}, ${error.error.message ?? 'no message'}`
+            );
+          }
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(data.results, null, 2),
+              },
+            ],
+          };
+        }
+
+        case 'lightdash_get_custom_metrics': {
+          const args = GetCustomMetricsSchema.parse(request.params.arguments);
+          const { data, error } = await lightdashClient.GET(
+            '/api/v1/projects/{projectUuid}/custom-metrics',
+            {
+              params: { path: { projectUuid: args.projectUuid } },
+            }
+          );
+          if (error) {
+            throw new Error(
+              `Lightdash API error: ${error.error.name}, ${error.error.message ?? 'no message'}`
+            );
+          }
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(data.results, null, 2),
+              },
+            ],
+          };
+        }
+
+        case 'lightdash_get_catalog': {
+          const args = GetCatalogSchema.parse(request.params.arguments);
+          const { data, error } = await lightdashClient.GET(
+            '/api/v1/projects/{projectUuid}/dataCatalog',
+            {
+              params: { path: { projectUuid: args.projectUuid } },
+            }
+          );
+          if (error) {
+            throw new Error(
+              `Lightdash API error: ${error.error.name}, ${error.error.message ?? 'no message'}`
+            );
+          }
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(data.results, null, 2),
+              },
+            ],
+          };
+        }
+
+        case 'lightdash_get_metrics_catalog': {
+          const args = GetMetricsCatalogSchema.parse(request.params.arguments);
+          const { data, error } = await lightdashClient.GET(
+            '/api/v1/projects/{projectUuid}/dataCatalog/metrics',
+            {
+              params: { path: { projectUuid: args.projectUuid } },
+            }
+          );
+          if (error) {
+            throw new Error(
+              `Lightdash API error: ${error.error.name}, ${error.error.message ?? 'no message'}`
+            );
+          }
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(data.results, null, 2),
+              },
+            ],
+          };
+        }
+
+        case 'lightdash_get_charts_as_code': {
+          const args = GetChartsAsCodeSchema.parse(request.params.arguments);
+          const { data, error } = await lightdashClient.GET(
+            '/api/v1/projects/{projectUuid}/charts/code',
+            {
+              params: { path: { projectUuid: args.projectUuid } },
+            }
+          );
+          if (error) {
+            throw new Error(
+              `Lightdash API error: ${error.error.name}, ${error.error.message ?? 'no message'}`
+            );
+          }
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(data.results, null, 2),
+              },
+            ],
+          };
+        }
+
+        case 'lightdash_get_dashboards_as_code': {
+          const args = GetDashboardsAsCodeSchema.parse(
+            request.params.arguments
+          );
+          const { data, error } = await lightdashClient.GET(
+            '/api/v1/projects/{projectUuid}/dashboards/code',
+            {
+              params: { path: { projectUuid: args.projectUuid } },
+            }
+          );
+          if (error) {
+            throw new Error(
+              `Lightdash API error: ${error.error.name}, ${error.error.message ?? 'no message'}`
+            );
+          }
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(data.results, null, 2),
+              },
+            ],
+          };
+        }
+
+        case 'lightdash_get_metadata': {
+          const args = GetMetadataSchema.parse(request.params.arguments);
+          const { data, error } = await lightdashClient.GET(
+            '/api/v1/projects/{projectUuid}/dataCatalog/{table}/metadata',
+            {
+              params: {
+                path: {
+                  projectUuid: args.projectUuid,
+                  table: args.table,
+                },
+              },
+            }
+          );
+          if (error) {
+            throw new Error(
+              `Lightdash API error: ${error.error.name}, ${error.error.message ?? 'no message'}`
+            );
+          }
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(data.results, null, 2),
+              },
+            ],
+          };
+        }
+
+        case 'lightdash_get_analytics': {
+          const args = GetAnalyticsSchema.parse(request.params.arguments);
+          const { data, error } = await lightdashClient.GET(
+            '/api/v1/projects/{projectUuid}/dataCatalog/{table}/analytics',
+            {
+              params: {
+                path: {
+                  projectUuid: args.projectUuid,
+                  table: args.table,
+                },
+              },
+            }
+          );
+          if (error) {
+            throw new Error(
+              `Lightdash API error: ${error.error.name}, ${error.error.message ?? 'no message'}`
+            );
+          }
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(data.results, null, 2),
+              },
+            ],
+          };
+        }
+
+        case 'lightdash_get_user_attributes': {
+          const { data, error } = await lightdashClient.GET(
+            '/api/v1/org/attributes',
+            {}
+          );
+          if (error) {
+            throw new Error(
+              `Lightdash API error: ${error.error.name}, ${error.error.message ?? 'no message'}`
+            );
+          }
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(data.results, null, 2),
+              },
+            ],
+          };
+        }
+
+        default:
+          throw new Error(`Unknown tool: ${request.params.name}`);
+      }
+    } catch (error) {
+      console.error('Error handling request:', error);
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error occurred';
+      throw new Error(errorMessage);
     }
-  } catch (error) {
-    console.error('Error handling request:', error);
-    const errorMessage =
-      error instanceof Error ? error.message : 'Unknown error occurred';
-    throw new Error(errorMessage);
   }
-});
+);
 
-async function runServer() {
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
-  console.error('Lightdash MCP Server running on stdio');
+let httpPort: number | null = null;
+const args = process.argv.slice(2);
+const portIndex = args.indexOf('-port');
+
+if (portIndex !== -1 && args.length > portIndex + 1) {
+  const portValue = args[portIndex + 1];
+  const parsedPort = parseInt(portValue, 10);
+  if (isNaN(parsedPort)) {
+    console.error(
+      `Invalid port number provided for -port: "${portValue}". Must be a valid number. Exiting.`
+    );
+    process.exit(1);
+  } else {
+    httpPort = parsedPort;
+  }
+} else if (portIndex !== -1 && args.length <= portIndex + 1) {
+  console.error(
+    'Error: -port option requires a subsequent port number. Exiting.'
+  );
+  process.exit(1);
 }
 
-runServer().catch((error) => {
-  console.error('Fatal error in main():', error);
-  process.exit(1);
-});
+if (httpPort !== null) {
+  console.log(`[INFO] Starting HTTP mode on port: ${httpPort}`);
+  const httpTransport = new StreamableHTTPServerTransport({
+    sessionIdGenerator: () => crypto.randomUUID(),
+    enableJsonResponse: true,
+  });
+  server.connect(httpTransport);
+  startHttpServer(httpTransport, httpPort);
+
+  console.log(
+    `[INFO] MCP Server is listening on http://localhost:${httpPort}/mcp`
+  );
+  await new Promise<void>(() => {}); // Keep process alive
+} else {
+  console.log('[INFO] No -port argument found, starting Stdio mode.');
+  const stdioTransport = new StdioServerTransport();
+  server.connect(stdioTransport);
+}
