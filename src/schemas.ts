@@ -1,8 +1,8 @@
 import { z } from 'zod';
 
-export const ListProjectsSchema = z.object({});
+export const ListProjectsRequestSchema = z.object({});
 
-export const GetProjectSchema = z.object({
+export const GetProjectRequestSchema = z.object({
   projectUuid: z
     .string()
     .uuid()
@@ -11,7 +11,7 @@ export const GetProjectSchema = z.object({
     ),
 });
 
-export const ListSpacesSchema = z.object({
+export const ListSpacesRequestSchema = z.object({
   projectUuid: z
     .string()
     .uuid()
@@ -20,7 +20,7 @@ export const ListSpacesSchema = z.object({
     ),
 });
 
-export const ListChartsSchema = z.object({
+export const ListChartsRequestSchema = z.object({
   projectUuid: z
     .string()
     .uuid()
@@ -29,7 +29,7 @@ export const ListChartsSchema = z.object({
     ),
 });
 
-export const ListDashboardsSchema = z.object({
+export const ListDashboardsRequestSchema = z.object({
   projectUuid: z
     .string()
     .uuid()
@@ -38,7 +38,7 @@ export const ListDashboardsSchema = z.object({
     ),
 });
 
-export const GetCustomMetricsSchema = z.object({
+export const GetCustomMetricsRequestSchema = z.object({
   projectUuid: z
     .string()
     .uuid()
@@ -47,7 +47,7 @@ export const GetCustomMetricsSchema = z.object({
     ),
 });
 
-export const GetCatalogSchema = z.object({
+export const GetCatalogRequestSchema = z.object({
   projectUuid: z
     .string()
     .uuid()
@@ -56,7 +56,7 @@ export const GetCatalogSchema = z.object({
     ),
 });
 
-export const GetMetricsCatalogSchema = z.object({
+export const GetMetricsCatalogRequestSchema = z.object({
   projectUuid: z
     .string()
     .uuid()
@@ -65,7 +65,7 @@ export const GetMetricsCatalogSchema = z.object({
     ),
 });
 
-export const GetChartsAsCodeSchema = z.object({
+export const GetChartsAsCodeRequestSchema = z.object({
   projectUuid: z
     .string()
     .uuid()
@@ -74,7 +74,7 @@ export const GetChartsAsCodeSchema = z.object({
     ),
 });
 
-export const GetDashboardsAsCodeSchema = z.object({
+export const GetDashboardsAsCodeRequestSchema = z.object({
   projectUuid: z
     .string()
     .uuid()
@@ -83,7 +83,7 @@ export const GetDashboardsAsCodeSchema = z.object({
     ),
 });
 
-export const GetMetadataSchema = z.object({
+export const GetMetadataRequestSchema = z.object({
   projectUuid: z
     .string()
     .uuid()
@@ -93,7 +93,7 @@ export const GetMetadataSchema = z.object({
   table: z.string().min(1, 'Table name cannot be empty'),
 });
 
-export const GetAnalyticsSchema = z.object({
+export const GetAnalyticsRequestSchema = z.object({
   projectUuid: z
     .string()
     .uuid()
@@ -103,4 +103,4 @@ export const GetAnalyticsSchema = z.object({
   table: z.string(),
 });
 
-export const GetUserAttributesSchema = z.object({});
+export const GetUserAttributesRequestSchema = z.object({});
