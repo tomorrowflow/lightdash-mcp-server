@@ -49,13 +49,15 @@ npm install lightdash-mcp-server
 
 ### Usage
 
-1. Start the MCP server.
+The lightdash-mcp-server supports two transport modes: **Stdio** (default) and **HTTP**.
 
-Directly:
+#### Stdio Transport (Default)
+
+1. Start the MCP server:
+
 ```bash
 npx lightdash-mcp-server
 ```
-Or, run the installed module with node.
 
 2. Edit your MCP configuration json:
 ```json
@@ -74,11 +76,61 @@ Or, run the installed module with node.
 ...
 ```
 
+#### HTTP Transport (Streamable HTTP)
+
+1. Start the MCP server in HTTP mode:
+
+```bash
+npx lightdash-mcp-server -port 8080
+```
+
+This starts the server using StreamableHTTPServerTransport, making it accessible via HTTP at `http://localhost:8080/mcp`.
+
+2. Configure your MCP client to connect via HTTP:
+
+**For Claude Desktop and other MCP clients:**
+
+Edit your MCP configuration json to use the `url` field instead of `command` and `args`:
+
+```json
+...
+    "lightdash": {
+      "url": "http://localhost:8080/mcp"
+    },
+...
+```
+
+**For programmatic access:**
+
+Use the streamable HTTP client transport:
+```javascript
+import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
+
+const client = new Client({
+  name: 'my-client',
+  version: '1.0.0'
+}, {
+  capabilities: {}
+});
+
+const transport = new StreamableHTTPClientTransport(
+  new URL('http://localhost:8080/mcp')
+);
+
+await client.connect(transport);
+```
+
+**Note:** When using HTTP mode, ensure the environment variables `LIGHTDASH_API_KEY` and `LIGHTDASH_API_URL` are set in the environment where the server is running, as they cannot be passed through MCP client configuration.
+
+See `examples/list_spaces_http.ts` for a complete example of connecting to the HTTP server programmatically.
+
 ## Development
 
 ### Available Scripts
 
-- `npm run dev` - Start the server in development mode with hot reloading
+- `npm run dev` - Start the server in development mode with hot reloading (stdio transport)
+- `npm run dev:http` - Start the server in development mode with HTTP transport on port 8080
 - `npm run build` - Build the project for production
 - `npm run start` - Start the production server
 - `npm run lint` - Run linting checks (ESLint and Prettier)
