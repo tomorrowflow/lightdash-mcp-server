@@ -88,7 +88,21 @@ This starts the server using StreamableHTTPServerTransport, making it accessible
 
 2. Configure your MCP client to connect via HTTP:
 
-For programmatic access, use the streamable HTTP client transport:
+**For Claude Desktop and other MCP clients:**
+
+Edit your MCP configuration json to use the `url` field instead of `command` and `args`:
+
+```json
+...
+    "lightdash": {
+      "url": "http://localhost:8080/mcp"
+    },
+...
+```
+
+**For programmatic access:**
+
+Use the streamable HTTP client transport:
 ```javascript
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
@@ -106,8 +120,6 @@ const transport = new StreamableHTTPClientTransport(
 
 await client.connect(transport);
 ```
-
-For Claude Desktop or other MCP clients that support HTTP transport, configure the connection URL directly.
 
 **Note:** When using HTTP mode, ensure the environment variables `LIGHTDASH_API_KEY` and `LIGHTDASH_API_URL` are set in the environment where the server is running, as they cannot be passed through MCP client configuration.
 
