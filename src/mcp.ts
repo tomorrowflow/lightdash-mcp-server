@@ -7,19 +7,19 @@ import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { createLightdashClient } from 'lightdash-client-typescript-fetch';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 import {
-  ListProjectsSchema,
-  GetProjectSchema,
-  ListSpacesSchema,
-  ListChartsSchema,
-  ListDashboardsSchema,
-  GetCustomMetricsSchema,
-  GetCatalogSchema,
-  GetMetricsCatalogSchema,
-  GetChartsAsCodeSchema,
-  GetDashboardsAsCodeSchema,
-  GetMetadataSchema,
-  GetAnalyticsSchema,
-  GetUserAttributesSchema,
+  ListProjectsRequestSchema,
+  GetProjectRequestSchema,
+  ListSpacesRequestSchema,
+  ListChartsRequestSchema,
+  ListDashboardsRequestSchema,
+  GetCustomMetricsRequestSchema,
+  GetCatalogRequestSchema,
+  GetMetricsCatalogRequestSchema,
+  GetChartsAsCodeRequestSchema,
+  GetDashboardsAsCodeRequestSchema,
+  GetMetadataRequestSchema,
+  GetAnalyticsRequestSchema,
+  GetUserAttributesRequestSchema,
 } from './schemas.js';
 
 const lightdashClient = createLightdashClient(
@@ -49,67 +49,67 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       {
         name: 'lightdash_list_projects',
         description: 'List all projects in the Lightdash organization',
-        inputSchema: zodToJsonSchema(ListProjectsSchema),
+        inputSchema: zodToJsonSchema(ListProjectsRequestSchema),
       },
       {
         name: 'lightdash_get_project',
         description: 'Get details of a specific project',
-        inputSchema: zodToJsonSchema(GetProjectSchema),
+        inputSchema: zodToJsonSchema(GetProjectRequestSchema),
       },
       {
         name: 'lightdash_list_spaces',
         description: 'List all spaces in a project',
-        inputSchema: zodToJsonSchema(ListSpacesSchema),
+        inputSchema: zodToJsonSchema(ListSpacesRequestSchema),
       },
       {
         name: 'lightdash_list_charts',
         description: 'List all charts in a project',
-        inputSchema: zodToJsonSchema(ListChartsSchema),
+        inputSchema: zodToJsonSchema(ListChartsRequestSchema),
       },
       {
         name: 'lightdash_list_dashboards',
         description: 'List all dashboards in a project',
-        inputSchema: zodToJsonSchema(ListDashboardsSchema),
+        inputSchema: zodToJsonSchema(ListDashboardsRequestSchema),
       },
       {
         name: 'lightdash_get_custom_metrics',
         description: 'Get custom metrics for a project',
-        inputSchema: zodToJsonSchema(GetCustomMetricsSchema),
+        inputSchema: zodToJsonSchema(GetCustomMetricsRequestSchema),
       },
       {
         name: 'lightdash_get_catalog',
         description: 'Get catalog for a project',
-        inputSchema: zodToJsonSchema(GetCatalogSchema),
+        inputSchema: zodToJsonSchema(GetCatalogRequestSchema),
       },
       {
         name: 'lightdash_get_metrics_catalog',
         description: 'Get metrics catalog for a project',
-        inputSchema: zodToJsonSchema(GetMetricsCatalogSchema),
+        inputSchema: zodToJsonSchema(GetMetricsCatalogRequestSchema),
       },
       {
         name: 'lightdash_get_charts_as_code',
         description: 'Get charts as code for a project',
-        inputSchema: zodToJsonSchema(GetChartsAsCodeSchema),
+        inputSchema: zodToJsonSchema(GetChartsAsCodeRequestSchema),
       },
       {
         name: 'lightdash_get_dashboards_as_code',
         description: 'Get dashboards as code for a project',
-        inputSchema: zodToJsonSchema(GetDashboardsAsCodeSchema),
+        inputSchema: zodToJsonSchema(GetDashboardsAsCodeRequestSchema),
       },
       {
         name: 'lightdash_get_metadata',
         description: 'Get metadata for a specific table in the data catalog',
-        inputSchema: zodToJsonSchema(GetMetadataSchema),
+        inputSchema: zodToJsonSchema(GetMetadataRequestSchema),
       },
       {
         name: 'lightdash_get_analytics',
         description: 'Get analytics for a specific table in the data catalog',
-        inputSchema: zodToJsonSchema(GetAnalyticsSchema),
+        inputSchema: zodToJsonSchema(GetAnalyticsRequestSchema),
       },
       {
         name: 'lightdash_get_user_attributes',
         description: 'Get organization user attributes',
-        inputSchema: zodToJsonSchema(GetUserAttributesSchema),
+        inputSchema: zodToJsonSchema(GetUserAttributesRequestSchema),
       },
     ],
   };
@@ -140,13 +140,13 @@ server.setRequestHandler(
             content: [
               {
                 type: 'text',
-                text: JSON.stringify({ results: data }, null, 2),
+                text: JSON.stringify(data.results, null, 2),
               },
             ],
           };
         }
         case 'lightdash_get_project': {
-          const args = GetProjectSchema.parse(request.params.arguments);
+          const args = GetProjectRequestSchema.parse(request.params.arguments);
           const { data, error } = await lightdashClient.GET(
             '/api/v1/projects/{projectUuid}',
             {
@@ -168,13 +168,13 @@ server.setRequestHandler(
             content: [
               {
                 type: 'text',
-                text: JSON.stringify({ results: data }, null, 2),
+                text: JSON.stringify(data.results, null, 2),
               },
             ],
           };
         }
         case 'lightdash_list_spaces': {
-          const args = ListSpacesSchema.parse(request.params.arguments);
+          const args = ListSpacesRequestSchema.parse(request.params.arguments);
           const { data, error } = await lightdashClient.GET(
             '/api/v1/projects/{projectUuid}/spaces',
             {
@@ -196,13 +196,13 @@ server.setRequestHandler(
             content: [
               {
                 type: 'text',
-                text: JSON.stringify({ results: data }, null, 2),
+                text: JSON.stringify(data.results, null, 2),
               },
             ],
           };
         }
         case 'lightdash_list_charts': {
-          const args = ListChartsSchema.parse(request.params.arguments);
+          const args = ListChartsRequestSchema.parse(request.params.arguments);
           const { data, error } = await lightdashClient.GET(
             '/api/v1/projects/{projectUuid}/charts',
             {
@@ -224,13 +224,15 @@ server.setRequestHandler(
             content: [
               {
                 type: 'text',
-                text: JSON.stringify({ results: data }, null, 2),
+                text: JSON.stringify(data.results, null, 2),
               },
             ],
           };
         }
         case 'lightdash_list_dashboards': {
-          const args = ListDashboardsSchema.parse(request.params.arguments);
+          const args = ListDashboardsRequestSchema.parse(
+            request.params.arguments
+          );
           const { data, error } = await lightdashClient.GET(
             '/api/v1/projects/{projectUuid}/dashboards',
             {
@@ -252,13 +254,15 @@ server.setRequestHandler(
             content: [
               {
                 type: 'text',
-                text: JSON.stringify({ results: data }, null, 2),
+                text: JSON.stringify(data.results, null, 2),
               },
             ],
           };
         }
         case 'lightdash_get_custom_metrics': {
-          const args = GetCustomMetricsSchema.parse(request.params.arguments);
+          const args = GetCustomMetricsRequestSchema.parse(
+            request.params.arguments
+          );
           const { data, error } = await lightdashClient.GET(
             '/api/v1/projects/{projectUuid}/custom-metrics',
             {
@@ -280,13 +284,13 @@ server.setRequestHandler(
             content: [
               {
                 type: 'text',
-                text: JSON.stringify({ results: data }, null, 2),
+                text: JSON.stringify(data.results, null, 2),
               },
             ],
           };
         }
         case 'lightdash_get_catalog': {
-          const args = GetCatalogSchema.parse(request.params.arguments);
+          const args = GetCatalogRequestSchema.parse(request.params.arguments);
           const { data, error } = await lightdashClient.GET(
             '/api/v1/projects/{projectUuid}/dataCatalog',
             {
@@ -308,13 +312,15 @@ server.setRequestHandler(
             content: [
               {
                 type: 'text',
-                text: JSON.stringify({ results: data }, null, 2),
+                text: JSON.stringify(data.results, null, 2),
               },
             ],
           };
         }
         case 'lightdash_get_metrics_catalog': {
-          const args = GetMetricsCatalogSchema.parse(request.params.arguments);
+          const args = GetMetricsCatalogRequestSchema.parse(
+            request.params.arguments
+          );
           const { data, error } = await lightdashClient.GET(
             '/api/v1/projects/{projectUuid}/dataCatalog/metrics',
             {
@@ -336,13 +342,15 @@ server.setRequestHandler(
             content: [
               {
                 type: 'text',
-                text: JSON.stringify({ results: data }, null, 2),
+                text: JSON.stringify(data.results, null, 2),
               },
             ],
           };
         }
         case 'lightdash_get_charts_as_code': {
-          const args = GetChartsAsCodeSchema.parse(request.params.arguments);
+          const args = GetChartsAsCodeRequestSchema.parse(
+            request.params.arguments
+          );
           const { data, error } = await lightdashClient.GET(
             '/api/v1/projects/{projectUuid}/charts/code',
             {
@@ -364,13 +372,13 @@ server.setRequestHandler(
             content: [
               {
                 type: 'text',
-                text: JSON.stringify({ results: data }, null, 2),
+                text: JSON.stringify(data.results, null, 2),
               },
             ],
           };
         }
         case 'lightdash_get_dashboards_as_code': {
-          const args = GetDashboardsAsCodeSchema.parse(
+          const args = GetDashboardsAsCodeRequestSchema.parse(
             request.params.arguments
           );
           const { data, error } = await lightdashClient.GET(
@@ -394,13 +402,13 @@ server.setRequestHandler(
             content: [
               {
                 type: 'text',
-                text: JSON.stringify({ results: data }, null, 2),
+                text: JSON.stringify(data.results, null, 2),
               },
             ],
           };
         }
         case 'lightdash_get_metadata': {
-          const args = GetMetadataSchema.parse(request.params.arguments);
+          const args = GetMetadataRequestSchema.parse(request.params.arguments);
           const { data, error } = await lightdashClient.GET(
             '/api/v1/projects/{projectUuid}/dataCatalog/{table}/metadata',
             {
@@ -423,13 +431,15 @@ server.setRequestHandler(
             content: [
               {
                 type: 'text',
-                text: JSON.stringify({ results: data }, null, 2),
+                text: JSON.stringify(data.results, null, 2),
               },
             ],
           };
         }
         case 'lightdash_get_analytics': {
-          const args = GetAnalyticsSchema.parse(request.params.arguments);
+          const args = GetAnalyticsRequestSchema.parse(
+            request.params.arguments
+          );
           const { data, error } = await lightdashClient.GET(
             '/api/v1/projects/{projectUuid}/dataCatalog/{table}/analytics',
             {
@@ -452,7 +462,7 @@ server.setRequestHandler(
             content: [
               {
                 type: 'text',
-                text: JSON.stringify({ results: data }, null, 2),
+                text: JSON.stringify(data.results, null, 2),
               },
             ],
           };
@@ -473,7 +483,7 @@ server.setRequestHandler(
             content: [
               {
                 type: 'text',
-                text: JSON.stringify({ results: data }, null, 2),
+                text: JSON.stringify(data.results, null, 2),
               },
             ],
           };
