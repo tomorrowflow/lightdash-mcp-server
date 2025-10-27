@@ -25,6 +25,12 @@ import {
   GetMetadataRequestSchema,
   GetAnalyticsRequestSchema,
   GetUserAttributesRequestSchema,
+  RunUnderlyingDataQueryRequestSchema,
+  GetCatalogSearchRequestSchema,
+  GetExploreWithFullSchemaRequestSchema,
+  GetExploresSummaryRequestSchema,
+  GetSavedChartResultsRequestSchema,
+  GetDashboardByUuidRequestSchema,
 } from './schemas.js';
 
 // Get package.json version for fallback
@@ -176,6 +182,36 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         name: 'lightdash_get_user_attributes',
         description: 'Get organization user attributes',
         inputSchema: zodToJsonSchema(GetUserAttributesRequestSchema),
+      },
+      {
+        name: 'lightdash_run_underlying_data_query',
+        description: 'Execute queries against explores and return actual data results - enables data analysis',
+        inputSchema: zodToJsonSchema(RunUnderlyingDataQueryRequestSchema),
+      },
+      {
+        name: 'lightdash_get_catalog_search',
+        description: 'Search across all catalog items (explores, fields, dashboards, charts) with filtering and pagination',
+        inputSchema: zodToJsonSchema(GetCatalogSearchRequestSchema),
+      },
+      {
+        name: 'lightdash_get_explore_with_full_schema',
+        description: 'Get complete explore schema with all metrics and dimensions - essential for building queries',
+        inputSchema: zodToJsonSchema(GetExploreWithFullSchemaRequestSchema),
+      },
+      {
+        name: 'lightdash_get_explores_summary',
+        description: 'List all available explores with basic metadata - fast way to discover data models',
+        inputSchema: zodToJsonSchema(GetExploresSummaryRequestSchema),
+      },
+      {
+        name: 'lightdash_get_saved_chart_results',
+        description: 'Get results from an existing saved chart with applied filters - leverage existing analyst work',
+        inputSchema: zodToJsonSchema(GetSavedChartResultsRequestSchema),
+      },
+      {
+        name: 'lightdash_get_dashboard_by_uuid',
+        description: 'Get complete dashboard details including all tiles and configuration',
+        inputSchema: zodToJsonSchema(GetDashboardByUuidRequestSchema),
       },
     ],
   };
@@ -564,6 +600,319 @@ server.setRequestHandler(
               {
                 type: 'text',
                 text: JSON.stringify(data.results, null, 2),
+              },
+            ],
+          };
+        }
+        case 'lightdash_run_underlying_data_query': {
+          const args = RunUnderlyingDataQueryRequestSchema.parse(request.params.arguments);
+          
+          // Build the query body
+          const queryBody: any = {};
+          
+          if (args.dimensions && args.dimensions.length > 0) {
+            queryBody.dimensions = args.dimensions;
+          }
+          
+          if (args.metrics && args.metrics.length > 0) {
+            queryBody.metrics = args.metrics;
+          }
+          
+          if (args.filters) {
+            queryBody.filters = args.filters;
+          }
+          
+          if (args.sorts && args.sorts.length > 0) {
+            queryBody.sorts = args.sorts;
+          }
+          
+          if (args.limit) {
+            queryBody.limit = args.limit;
+          }
+          
+          if (args.tableCalculations && args.tableCalculations.length > 0) {
+            queryBody.tableCalculations = args.tableCalculations;
+          }
+
+          const result = await withRetry(async () => {
+            const { data, error } = await lightdashClient.POST(
+              '/api/v1/projects/{projectUuid}/explores/{exploreId}/runUnderlyingDataQuery',
+              {
+                params: {
+                  path: {
+                    projectUuid: args.projectUuid,
+                    exploreId: args.exploreId,
+                  },
+                },
+                body: queryBody,
+              }
+            );
+            if (error) {
+              throw new Error(
+                `Lightdash API error: ${error.error.name}, ${
+                  error.error.message ?? 'no message'
+                }`
+              );
+            }
+            return data;
+          });
+
+          // Parse the nested response format according to the roadmap
+          // Response format: rows[].fieldId.value.raw
+          const parsedResult = {
+            ...result.results,
+            rows: result.results.rows?.map((row: any) => {
+              const parsedRow: any = {};
+              for (const [fieldId, fieldData] of Object.entries(row)) {
+                if (fieldData && typeof fieldData === 'object' && 'value' in fieldData) {
+                  const valueData = (fieldData as any).value;
+                  parsedRow[fieldId] = {
+                    raw: valueData?.raw,
+                    formatted: valueData?.formatted,
+                  };
+                } else {
+                  // Fallback for unexpected format
+                  parsedRow[fieldId] = fieldData;
+                }
+              }
+              return parsedRow;
+            }) || [],
+          };
+
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(parsedResult, null, 2),
+              },
+            ],
+          };
+        }
+        case 'lightdash_get_catalog_search': {
+          const args = GetCatalogSearchRequestSchema.parse(request.params.arguments);
+          
+          // Build query parameters for catalog search
+          const queryParams = new URLSearchParams();
+          
+          if (args.search) {
+            queryParams.append('search', args.search);
+          }
+          
+          if (args.type) {
+            queryParams.append('type', args.type);
+          }
+          
+          if (args.limit) {
+            queryParams.append('limit', args.limit.toString());
+          }
+          
+          if (args.page) {
+            queryParams.append('page', args.page.toString());
+          }
+
+          const result = await withRetry(async () => {
+            const { data, error } = await lightdashClient.GET(
+              '/api/v1/projects/{projectUuid}/dataCatalog',
+              {
+                params: {
+                  path: {
+                    projectUuid: args.projectUuid,
+                  },
+                  query: Object.fromEntries(queryParams.entries()),
+                },
+              }
+            );
+            if (error) {
+              throw new Error(
+                `Lightdash API error: ${error.error.name}, ${
+                  error.error.message ?? 'no message'
+                }`
+              );
+            }
+            return data;
+          });
+
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(result.results, null, 2),
+              },
+            ],
+          };
+        }
+        case 'lightdash_get_explore_with_full_schema': {
+          const args = GetExploreWithFullSchemaRequestSchema.parse(request.params.arguments);
+
+          const result = await withRetry(async () => {
+            const { data, error } = await lightdashClient.GET(
+              '/api/v1/projects/{projectUuid}/explores/{exploreId}',
+              {
+                params: {
+                  path: {
+                    projectUuid: args.projectUuid,
+                    exploreId: args.exploreId,
+                  },
+                },
+              }
+            );
+            if (error) {
+              throw new Error(
+                `Lightdash API error: ${error.error.name}, ${
+                  error.error.message ?? 'no message'
+                }`
+              );
+            }
+            return data;
+          });
+
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(result.results, null, 2),
+              },
+            ],
+          };
+        }
+        case 'lightdash_get_explores_summary': {
+          const args = GetExploresSummaryRequestSchema.parse(request.params.arguments);
+
+          const result = await withRetry(async () => {
+            const { data, error } = await lightdashClient.GET(
+              '/api/v1/projects/{projectUuid}/explores',
+              {
+                params: {
+                  path: {
+                    projectUuid: args.projectUuid,
+                  },
+                },
+              }
+            );
+            if (error) {
+              throw new Error(
+                `Lightdash API error: ${error.error.name}, ${
+                  error.error.message ?? 'no message'
+                }`
+              );
+            }
+            return data;
+          });
+
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(result.results, null, 2),
+              },
+            ],
+          };
+        }
+        case 'lightdash_get_saved_chart_results': {
+          const args = GetSavedChartResultsRequestSchema.parse(request.params.arguments);
+          
+          // Build the request body with optional parameters
+          const requestBody: any = {};
+          
+          if (args.invalidateCache !== undefined) {
+            requestBody.invalidateCache = args.invalidateCache;
+          }
+          
+          if (args.dashboardFilters) {
+            requestBody.dashboardFilters = args.dashboardFilters;
+          }
+          
+          if (args.dateZoomGranularity) {
+            requestBody.dateZoomGranularity = args.dateZoomGranularity;
+          }
+
+          const result = await withRetry(async () => {
+            const { data, error } = await lightdashClient.POST(
+              '/api/v1/saved/{chartUuid}/results',
+              {
+                params: {
+                  path: {
+                    chartUuid: args.chartUuid,
+                  },
+                },
+                body: Object.keys(requestBody).length > 0 ? requestBody : undefined,
+              }
+            );
+            if (error) {
+              throw new Error(
+                `Lightdash API error: ${error.error.name}, ${
+                  error.error.message ?? 'no message'
+                }`
+              );
+            }
+            return data;
+          });
+
+          // Parse the nested response format according to the roadmap
+          // Response format: rows[].fieldId.value.raw (same as run_underlying_data_query)
+          const parsedResult = {
+            ...result.results,
+            rows: result.results.rows?.map((row: any) => {
+              const parsedRow: any = {};
+              for (const [fieldId, fieldData] of Object.entries(row)) {
+                if (fieldData && typeof fieldData === 'object' && 'value' in fieldData) {
+                  const valueData = (fieldData as any).value;
+                  parsedRow[fieldId] = {
+                    raw: valueData?.raw,
+                    formatted: valueData?.formatted,
+                  };
+                } else {
+                  // Fallback for unexpected format
+                  parsedRow[fieldId] = fieldData;
+                }
+              }
+              return parsedRow;
+            }) || [],
+          };
+
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(parsedResult, null, 2),
+              },
+            ],
+          };
+        }
+        case 'lightdash_get_dashboard_by_uuid': {
+          const args = GetDashboardByUuidRequestSchema.parse(request.params.arguments);
+
+          const result = await withRetry(async () => {
+            // Use fetch directly since this endpoint might not be in the typed client
+            const response = await fetch(
+              `${process.env.LIGHTDASH_API_URL || 'https://app.lightdash.cloud'}/api/v1/dashboards/${args.dashboardUuid}`,
+              {
+                method: 'GET',
+                headers: {
+                  'Authorization': `ApiKey ${process.env.LIGHTDASH_API_KEY}`,
+                  'Content-Type': 'application/json',
+                },
+              }
+            );
+
+            if (!response.ok) {
+              throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            const data = await response.json() as any;
+            
+            if (data.status === 'error') {
+              throw new Error(`Lightdash API error: ${data.error.name}, ${data.error.message ?? 'no message'}`);
+            }
+            
+            return data;
+          });
+
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify((result as any).results, null, 2),
               },
             ],
           };
