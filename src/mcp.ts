@@ -2,6 +2,12 @@ import {
   ListToolsRequestSchema,
   CallToolRequestSchema,
   type CallToolRequest,
+  ListResourcesRequestSchema,
+  ReadResourceRequestSchema,
+  type ReadResourceRequest,
+  ListPromptsRequestSchema,
+  GetPromptRequestSchema,
+  type GetPromptRequest,
   McpError,
   ErrorCode,
 } from '@modelcontextprotocol/sdk/types.js';
@@ -110,7 +116,9 @@ export const server = new Server(
   },
   {
     capabilities: {
-      tools: {}, // Only tools capability - no resources or prompts
+      tools: {},
+      resources: {},
+      prompts: {},
     },
   }
 );
@@ -215,6 +223,389 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
     ],
   };
+});
+
+// Resources handler - provides URI-based read-only access to data
+server.setRequestHandler(ListResourcesRequestSchema, async () => {
+  return {
+    resources: [
+      {
+        uri: 'lightdash://projects/{projectUuid}/catalog',
+        name: 'Project Catalog',
+        description: 'Searchable catalog of all items in project (explores, fields, dashboards, charts)',
+        mimeType: 'application/json',
+      },
+      {
+        uri: 'lightdash://projects/{projectUuid}/explores/{exploreId}/schema',
+        name: 'Explore Schema',
+        description: 'Complete explore schema with all metrics and dimensions',
+        mimeType: 'application/json',
+      },
+      {
+        uri: 'lightdash://dashboards/{dashboardUuid}',
+        name: 'Dashboard Structure',
+        description: 'Dashboard structure and tiles configuration',
+        mimeType: 'application/json',
+      },
+      {
+        uri: 'lightdash://charts/{chartUuid}',
+        name: 'Chart Configuration',
+        description: 'Saved chart configuration and metadata',
+        mimeType: 'application/json',
+      },
+    ],
+  };
+});
+
+server.setRequestHandler(ReadResourceRequestSchema, async (request: ReadResourceRequest) => {
+  const uri = request.params.uri;
+  
+  try {
+    // Parse the URI to determine the resource type and parameters
+    if (!uri.startsWith('lightdash://')) {
+      throw new McpError(ErrorCode.InvalidParams, 'Only lightdash:// URIs are supported');
+    }
+    
+    // For custom protocols like lightdash://, everything after // is the path
+    const uriWithoutProtocol = uri.replace('lightdash://', '');
+    const [pathWithQuery, queryString] = uriWithoutProtocol.split('?');
+    const pathParts = pathWithQuery.split('/').filter(part => part.length > 0);
+    
+    if (pathParts.length < 2) {
+      throw new McpError(ErrorCode.InvalidParams, `Invalid resource path: ${pathWithQuery}`);
+    }
+    
+    // Parse query parameters
+    const queryParams = new URLSearchParams(queryString || '');
+    
+    // Handle different resource types
+    if (pathParts[0] === 'projects' && pathParts.length >= 3 && pathParts[2] === 'catalog') {
+      // lightdash://projects/{projectUuid}/catalog
+      const projectUuid = pathParts[1];
+      
+      const result = await withRetry(async () => {
+        const { data, error } = await lightdashClient.GET(
+          '/api/v1/projects/{projectUuid}/dataCatalog',
+          {
+            params: {
+              path: { projectUuid },
+              query: Object.fromEntries(queryParams.entries()),
+            },
+          }
+        );
+        if (error) {
+          throw new Error(`Lightdash API error: ${error.error.name}, ${error.error.message ?? 'no message'}`);
+        }
+        return data;
+      });
+      
+      return {
+        contents: [
+          {
+            uri,
+            mimeType: 'application/json',
+            text: JSON.stringify(result.results, null, 2),
+          },
+        ],
+      };
+    }
+    
+    if (pathParts[0] === 'projects' && pathParts.length >= 5 && pathParts[2] === 'explores' && pathParts[4] === 'schema') {
+      // lightdash://projects/{projectUuid}/explores/{exploreId}/schema
+      const projectUuid = pathParts[1];
+      const exploreId = pathParts[3];
+      
+      const result = await withRetry(async () => {
+        const { data, error } = await lightdashClient.GET(
+          '/api/v1/projects/{projectUuid}/explores/{exploreId}',
+          {
+            params: {
+              path: { projectUuid, exploreId },
+            },
+          }
+        );
+        if (error) {
+          throw new Error(`Lightdash API error: ${error.error.name}, ${error.error.message ?? 'no message'}`);
+        }
+        return data;
+      });
+      
+      return {
+        contents: [
+          {
+            uri,
+            mimeType: 'application/json',
+            text: JSON.stringify(result.results, null, 2),
+          },
+        ],
+      };
+    }
+    
+    if (pathParts[0] === 'dashboards' && pathParts.length >= 2) {
+      // lightdash://dashboards/{dashboardUuid}
+      const dashboardUuid = pathParts[1];
+      
+      const result = await withRetry(async () => {
+        const response = await fetch(
+          `${process.env.LIGHTDASH_API_URL || 'https://app.lightdash.cloud'}/api/v1/dashboards/${dashboardUuid}`,
+          {
+            method: 'GET',
+            headers: {
+              'Authorization': `ApiKey ${process.env.LIGHTDASH_API_KEY}`,
+              'Content-Type': 'application/json',
+            },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const data = await response.json() as any;
+        
+        if (data.status === 'error') {
+          throw new Error(`Lightdash API error: ${data.error.name}, ${data.error.message ?? 'no message'}`);
+        }
+        
+        return data;
+      });
+      
+      return {
+        contents: [
+          {
+            uri,
+            mimeType: 'application/json',
+            text: JSON.stringify((result as any).results, null, 2),
+          },
+        ],
+      };
+    }
+    
+    if (pathParts[0] === 'charts' && pathParts.length >= 2) {
+      // lightdash://charts/{chartUuid}
+      const chartUuid = pathParts[1];
+      
+      const result = await withRetry(async () => {
+        const response = await fetch(
+          `${process.env.LIGHTDASH_API_URL || 'https://app.lightdash.cloud'}/api/v1/saved/${chartUuid}`,
+          {
+            method: 'GET',
+            headers: {
+              'Authorization': `ApiKey ${process.env.LIGHTDASH_API_KEY}`,
+              'Content-Type': 'application/json',
+            },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const data = await response.json() as any;
+        
+        if (data.status === 'error') {
+          throw new Error(`Lightdash API error: ${data.error.name}, ${data.error.message ?? 'no message'}`);
+        }
+        
+        return data;
+      });
+      
+      return {
+        contents: [
+          {
+            uri,
+            mimeType: 'application/json',
+            text: JSON.stringify((result as any).results, null, 2),
+          },
+        ],
+      };
+    }
+    
+    throw new McpError(ErrorCode.InvalidParams, `Unsupported resource path: ${pathWithQuery}`);
+    
+  } catch (error) {
+    if (error instanceof McpError) {
+      throw error;
+    }
+    
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    throw new McpError(ErrorCode.InternalError, `Failed to read resource: ${errorMessage}`);
+  }
+});
+
+// Prompts handler - provides guided workflow templates
+server.setRequestHandler(ListPromptsRequestSchema, async () => {
+  return {
+    prompts: [
+      {
+        name: 'analyze-metric',
+        description: 'Guided metric analysis workflow - analyze a specific metric with dimensions and filters',
+        arguments: [
+          {
+            name: 'metric_name',
+            description: 'Business term for the metric to analyze',
+            required: true,
+          },
+          {
+            name: 'explore_name',
+            description: 'Which explore/table to use for analysis',
+            required: true,
+          },
+          {
+            name: 'dimensions',
+            description: 'Breakdown dimensions (comma-separated)',
+            required: false,
+          },
+          {
+            name: 'filters',
+            description: 'Filter conditions to apply',
+            required: false,
+          },
+          {
+            name: 'date_range',
+            description: 'Time period for analysis (e.g., "last 30 days")',
+            required: false,
+          },
+          {
+            name: 'sort_field',
+            description: 'Field to sort results by',
+            required: false,
+          },
+          {
+            name: 'sort_direction',
+            description: 'Sort direction: "asc" or "desc"',
+            required: false,
+          },
+        ],
+      },
+      {
+        name: 'find-and-explore',
+        description: 'Discover and analyze data workflow - find relevant data and suggest analysis approach',
+        arguments: [
+          {
+            name: 'business_question',
+            description: 'The business question you want to answer',
+            required: true,
+          },
+          {
+            name: 'search_terms',
+            description: 'Specific keywords to search for in the catalog',
+            required: false,
+          },
+        ],
+      },
+      {
+        name: 'dashboard-deep-dive',
+        description: 'Comprehensive dashboard analysis workflow - analyze all tiles in a dashboard',
+        arguments: [
+          {
+            name: 'dashboard_name',
+            description: 'Dashboard name or UUID to analyze',
+            required: true,
+          },
+        ],
+      },
+    ],
+  };
+});
+
+server.setRequestHandler(GetPromptRequestSchema, async (request: GetPromptRequest) => {
+  const { name, arguments: args } = request.params;
+  
+  try {
+    switch (name) {
+      case 'analyze-metric': {
+        const metric_name = args?.metric_name || '{metric_name}';
+        const explore_name = args?.explore_name || '{explore_name}';
+        const dimensions = args?.dimensions || '{dimensions}';
+        const filters = args?.filters || '{filters}';
+        const date_range = args?.date_range || '{date_range}';
+        const sort_field = args?.sort_field || '{sort_field}';
+        const sort_direction = args?.sort_direction || '{sort_direction}';
+        
+        return {
+          description: `Analyze the metric "${metric_name}" from the "${explore_name}" explore`,
+          messages: [
+            {
+              role: 'user',
+              content: {
+                type: 'text',
+                text: `Analyze the metric "${metric_name}" from the "${explore_name}" explore.
+
+1. First, search for the metric in the catalog to get its exact field ID
+2. Search for relevant dimensions to break down the analysis
+3. Build and execute a query with:
+   - Metric: ${metric_name}
+   - Dimensions: ${dimensions}
+   - Filters: ${filters}
+   - Date range: ${date_range}
+   - Sort by: ${sort_field} ${sort_direction}
+4. Interpret the results and provide insights`,
+              },
+            },
+          ],
+        };
+      }
+      
+      case 'find-and-explore': {
+        const business_question = args?.business_question || '{business_question}';
+        const search_terms = args?.search_terms || '{search_terms}';
+        
+        return {
+          description: `Discover and analyze data to answer: "${business_question}"`,
+          messages: [
+            {
+              role: 'user',
+              content: {
+                type: 'text',
+                text: `I want to analyze "${business_question}".
+
+1. Search the catalog for relevant fields related to: ${search_terms}
+2. Identify the best explore (table) to use
+3. Find relevant metrics and dimensions
+4. Suggest a query structure to answer the question
+5. Execute the query if confirmed`,
+              },
+            },
+          ],
+        };
+      }
+      
+      case 'dashboard-deep-dive': {
+        const dashboard_name = args?.dashboard_name || '{dashboard_name}';
+        
+        return {
+          description: `Comprehensive analysis of dashboard: ${dashboard_name}`,
+          messages: [
+            {
+              role: 'user',
+              content: {
+                type: 'text',
+                text: `Analyze the dashboard: ${dashboard_name}
+
+1. Find the dashboard in the catalog
+2. Get the full dashboard structure
+3. For each tile:
+   - Get the tile results
+   - Summarize key findings
+4. Provide an executive summary of all insights`,
+              },
+            },
+          ],
+        };
+      }
+      
+      default:
+        throw new McpError(ErrorCode.InvalidParams, `Unknown prompt: ${name}`);
+    }
+  } catch (error) {
+    if (error instanceof McpError) {
+      throw error;
+    }
+    
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    throw new McpError(ErrorCode.InternalError, `Failed to get prompt: ${errorMessage}`);
+  }
 });
 
 server.setRequestHandler(
