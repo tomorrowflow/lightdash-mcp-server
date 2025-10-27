@@ -44,8 +44,19 @@ npm install lightdash-mcp-server
 
 ### Configuration
 
-- `LIGHTDASH_API_KEY`: Your Lightdash PAT
-- `LIGHTDASH_API_URL`: The API base URL
+#### Required Environment Variables
+
+- `LIGHTDASH_API_KEY`: Your Lightdash Personal Access Token (PAT)
+- `LIGHTDASH_API_URL`: The API base URL (default: `https://app.lightdash.cloud`)
+
+#### Optional Environment Variables
+
+- `CORS_ORIGIN`: Configure CORS origin for HTTP transport (default: `*`)
+- `ALLOWED_HOSTS`: Comma-separated list of allowed hosts for DNS protection (default: `localhost,127.0.0.1`)
+- `CONNECTION_TIMEOUT`: Connection timeout in milliseconds (default: `30000`)
+- `MAX_RETRIES`: Maximum number of retry attempts for failed requests (default: `3`)
+- `RETRY_DELAY`: Initial delay between retries in milliseconds (default: `1000`)
+- `HTTP_PORT`: Default HTTP port when using `-port` argument is not provided
 
 ### Usage
 
@@ -81,10 +92,10 @@ npx lightdash-mcp-server
 1. Start the MCP server in HTTP mode:
 
 ```bash
-npx lightdash-mcp-server -port 8080
+npx lightdash-mcp-server -port 8088
 ```
 
-This starts the server using StreamableHTTPServerTransport, making it accessible via HTTP at `http://localhost:8080/mcp`.
+This starts the server using StreamableHTTPServerTransport, making it accessible via HTTP at `http://localhost:8088/mcp`.
 
 2. Configure your MCP client to connect via HTTP:
 
@@ -95,7 +106,7 @@ Edit your MCP configuration json to use the `url` field instead of `command` and
 ```json
 ...
     "lightdash": {
-      "url": "http://localhost:8080/mcp"
+      "url": "http://localhost:8088/mcp"
     },
 ...
 ```
@@ -115,7 +126,7 @@ const client = new Client({
 });
 
 const transport = new StreamableHTTPClientTransport(
-  new URL('http://localhost:8080/mcp')
+  new URL('http://localhost:8088/mcp')
 );
 
 await client.connect(transport);
@@ -125,17 +136,69 @@ await client.connect(transport);
 
 See `examples/list_spaces_http.ts` for a complete example of connecting to the HTTP server programmatically.
 
+### Health Check Endpoint
+
+When running in HTTP mode, the server provides an enhanced health check endpoint at `/health` that includes:
+
+- **Basic health status**: `healthy`, `degraded`, or `unhealthy`
+- **Lightdash API connectivity test**: Verifies connection to Lightdash API
+- **Error rate monitoring**: Tracks and reports error rates over time
+- **Performance metrics**: Response times and system status
+- **Version information**: Current server version
+
+Example health check response:
+```json
+{
+  "status": "healthy",
+  "timestamp": "2024-01-15T10:30:00.000Z",
+  "version": "0.0.12",
+  "responseTime": 245,
+  "errorRate": 0,
+  "lightdashConnected": true,
+  "projectCount": 5
+}
+```
+
+### Security Features
+
+The HTTP transport includes several security enhancements:
+
+- **CORS protection**: Configurable cross-origin resource sharing
+- **Host validation**: DNS rebinding protection with allowlist
+- **Error rate limiting**: Automatic degradation detection
+- **Graceful shutdown**: Proper cleanup on process termination
+
 ## Development
 
 ### Available Scripts
 
 - `npm run dev` - Start the server in development mode with hot reloading (stdio transport)
-- `npm run dev:http` - Start the server in development mode with HTTP transport on port 8080
+- `npm run dev:http` - Start the server in development mode with HTTP transport on port 8088
 - `npm run build` - Build the project for production
 - `npm run start` - Start the production server
+- `npm test` - Run comprehensive validation tests for all functionality
+- `npm run test:build` - Build and run tests on production build
 - `npm run lint` - Run linting checks (ESLint and Prettier)
 - `npm run fix` - Automatically fix linting issues
 - `npm run examples` - Run the example scripts
+
+### Testing
+
+The project includes a comprehensive test suite that validates:
+
+- **All 13 MCP tools**: Ensures each tool responds correctly
+- **HTTP and Stdio transports**: Tests both communication methods
+- **Security features**: Validates CORS and host validation
+- **Performance**: Checks response times and concurrent handling
+- **Health monitoring**: Tests the enhanced health check endpoint
+- **Error handling**: Verifies proper MCP error codes and retry logic
+
+Run the test suite:
+```bash
+npm test
+```
+
+The tests will automatically start a test server, run all validations, and provide a detailed report of results.
 
 ### Contributing
 
