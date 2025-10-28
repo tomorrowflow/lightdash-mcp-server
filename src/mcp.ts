@@ -63,6 +63,46 @@ const serverVersion = process.env.MCP_SERVER_VERSION || packageVersion;
 const MAX_RETRIES = parseInt(process.env.MAX_RETRIES || '3', 10);
 const RETRY_DELAY = parseInt(process.env.RETRY_DELAY || '1000', 10);
 
+// Enhanced error message helper function
+function createEnhancedErrorMessage(error: any): string {
+  let errorMessage = `Lightdash API error: ${error.error.name}`;
+  
+  if (error.error.message) {
+    errorMessage += `, ${error.error.message}`;
+  }
+  
+  // Include detailed validation errors from error.error.data
+  if (error.error.data && typeof error.error.data === 'object') {
+    const validationDetails = [];
+    
+    // Extract field-specific validation errors
+    for (const [field, fieldError] of Object.entries(error.error.data)) {
+      if (fieldError && typeof fieldError === 'object' && 'message' in fieldError) {
+        validationDetails.push(`${field}: ${(fieldError as any).message}`);
+      } else if (typeof fieldError === 'string') {
+        validationDetails.push(`${field}: ${fieldError}`);
+      }
+    }
+    
+    if (validationDetails.length > 0) {
+      errorMessage += `. Validation errors: ${validationDetails.join(', ')}`;
+      
+      // Add actionable suggestions for common errors
+      if (validationDetails.some(detail => detail.includes('filters') && detail.includes('required'))) {
+        errorMessage += '. Suggestion: Ensure filters object is provided, even if empty ({}).';
+      }
+      if (validationDetails.some(detail => detail.includes('dimensions') || detail.includes('metrics'))) {
+        errorMessage += '. Suggestion: Check that field IDs exist in the explore schema.';
+      }
+      if (validationDetails.some(detail => detail.includes('exploreId') || detail.includes('explore'))) {
+        errorMessage += '. Suggestion: Verify the explore/table name exists in the project.';
+      }
+    }
+  }
+  
+  return errorMessage;
+}
+
 // Retry helper function
 async function withRetry<T>(
   operation: () => Promise<T>,
@@ -193,7 +233,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: 'lightdash_run_underlying_data_query',
-        description: 'Execute queries against explores and return actual data results - enables data analysis',
+        description: 'Execute underlying data queries in Lightdash with support for dimensions, metrics, filters (including boolean values), sorts, and table calculations.\n\nFilter values support strings, numbers, and boolean values (true/false). The exploreId parameter should match the table/explore name you want to query.\n\nExample with boolean filter:\n{\n  "projectUuid": "your-project-uuid",\n  "exploreId": "table_name",\n  "dimensions": ["field1", "field2"],\n  "metrics": ["metric1"],\n  "filters": {\n    "dimensions": {\n      "id": "filter_group",\n      "and": [{\n        "id": "bool_filter",\n        "target": {"fieldId": "is_active"},\n        "operator": "equals",\n        "values": [true]\n      }]\n    }\n  },\n  "sorts": [{"fieldId": "field1", "descending": false}],\n  "limit": 100\n}\n\nOptional fields (metrics, sorts, tableCalculations, filters) can be omitted or set to empty arrays. The exploreName is automatically set to match exploreId for API compatibility.',
         inputSchema: zodToJsonSchema(RunUnderlyingDataQueryRequestSchema),
       },
       {
@@ -998,32 +1038,145 @@ server.setRequestHandler(
         case 'lightdash_run_underlying_data_query': {
           const args = RunUnderlyingDataQueryRequestSchema.parse(request.params.arguments);
           
-          // Build the query body
-          const queryBody: any = {};
-          
-          if (args.dimensions && args.dimensions.length > 0) {
-            queryBody.dimensions = args.dimensions;
-          }
-          
-          if (args.metrics && args.metrics.length > 0) {
-            queryBody.metrics = args.metrics;
-          }
-          
-          if (args.filters) {
-            queryBody.filters = args.filters;
-          }
-          
-          if (args.sorts && args.sorts.length > 0) {
-            queryBody.sorts = args.sorts;
-          }
+          // Field name transformation function
+          const transformFieldName = (fieldName: string, exploreId: string): string => {
+            // If field already has the explore prefix, return as-is
+            if (fieldName.startsWith(exploreId + '_')) {
+              console.log(`🔍 Field already prefixed: ${fieldName}`);
+              return fieldName;
+            }
+            
+            // Add explore prefix to create fully qualified field name
+            const transformedName = `${exploreId}_${fieldName}`;
+            console.log(`🔄 Field transformation: ${fieldName} → ${transformedName}`);
+            return transformedName;
+          };
+
+          // Transform field arrays
+          const transformFieldArray = (fields: string[] | undefined, exploreId: string, fieldType: string): string[] => {
+            if (!fields || fields.length === 0) {
+              console.log(`📝 No ${fieldType} fields to transform`);
+              return [];
+            }
+            
+            console.log(`🔄 Transforming ${fields.length} ${fieldType} field(s):`);
+            const transformed = fields.map(field => transformFieldName(field, exploreId));
+            console.log(`   Original: [${fields.join(', ')}]`);
+            console.log(`   Transformed: [${transformed.join(', ')}]`);
+            return transformed;
+          };
+
+          // Transform filter field references
+          const transformFilters = (filters: any, exploreId: string): any => {
+            if (!filters || typeof filters !== 'object') {
+              return {};
+            }
+
+            const transformedFilters = { ...filters };
+
+            // Transform dimension filters
+            if (filters.dimensions && typeof filters.dimensions === 'object') {
+              transformedFilters.dimensions = { ...filters.dimensions };
+              
+              if (filters.dimensions.and && Array.isArray(filters.dimensions.and)) {
+                transformedFilters.dimensions.and = filters.dimensions.and.map((filter: any) => ({
+                  ...filter,
+                  target: {
+                    ...filter.target,
+                    fieldId: transformFieldName(filter.target.fieldId, exploreId)
+                  }
+                }));
+              }
+              
+              if (filters.dimensions.or && Array.isArray(filters.dimensions.or)) {
+                transformedFilters.dimensions.or = filters.dimensions.or.map((filter: any) => ({
+                  ...filter,
+                  target: {
+                    ...filter.target,
+                    fieldId: transformFieldName(filter.target.fieldId, exploreId)
+                  }
+                }));
+              }
+            }
+
+            // Transform metric filters
+            if (filters.metrics && typeof filters.metrics === 'object') {
+              transformedFilters.metrics = { ...filters.metrics };
+              
+              if (filters.metrics.and && Array.isArray(filters.metrics.and)) {
+                transformedFilters.metrics.and = filters.metrics.and.map((filter: any) => ({
+                  ...filter,
+                  target: {
+                    ...filter.target,
+                    fieldId: transformFieldName(filter.target.fieldId, exploreId)
+                  }
+                }));
+              }
+              
+              if (filters.metrics.or && Array.isArray(filters.metrics.or)) {
+                transformedFilters.metrics.or = filters.metrics.or.map((filter: any) => ({
+                  ...filter,
+                  target: {
+                    ...filter.target,
+                    fieldId: transformFieldName(filter.target.fieldId, exploreId)
+                  }
+                }));
+              }
+            }
+
+            return transformedFilters;
+          };
+
+          // Transform sort field references
+          const transformSorts = (sorts: any[] | undefined, exploreId: string): any[] => {
+            if (!sorts || sorts.length === 0) {
+              console.log('📝 No sort fields to transform');
+              return [];
+            }
+
+            console.log(`🔄 Transforming ${sorts.length} sort field(s):`);
+            const transformed = sorts.map(sort => ({
+              ...sort,
+              fieldId: transformFieldName(sort.fieldId, exploreId)
+            }));
+            
+            sorts.forEach((sort, index) => {
+              console.log(`   Sort ${index + 1}: ${sort.fieldId} → ${transformed[index].fieldId}`);
+            });
+            
+            return transformed;
+          };
+
+          // Apply field transformations
+          console.log('🚀 Starting field name transformations...');
+          const transformedDimensions = transformFieldArray(args.dimensions, args.exploreId, 'dimension');
+          const transformedMetrics = transformFieldArray(args.metrics, args.exploreId, 'metric');
+          const transformedFilters = transformFilters(args.filters, args.exploreId);
+          const transformedSorts = transformSorts(args.sorts, args.exploreId);
+
+          // Build the query body with transformed field names
+          const queryBody: any = {
+            // Use transformed field arrays
+            dimensions: transformedDimensions,
+            metrics: transformedMetrics,
+            sorts: transformedSorts,
+            tableCalculations: args.tableCalculations || [],
+            // exploreName is required and should match exploreId
+            exploreName: args.exploreId,
+            // Use transformed filters
+            filters: transformedFilters,
+          };
           
           if (args.limit) {
             queryBody.limit = args.limit;
           }
-          
-          if (args.tableCalculations && args.tableCalculations.length > 0) {
-            queryBody.tableCalculations = args.tableCalculations;
-          }
+
+          // DEBUG: Log the exact request being sent to Lightdash API
+          console.log('🔍 DEBUG: Sending request to Lightdash API:');
+          console.log('  URL: /api/v1/projects/{projectUuid}/explores/{exploreId}/runUnderlyingDataQuery');
+          console.log('  Project UUID:', args.projectUuid);
+          console.log('  Explore ID:', args.exploreId);
+          console.log('  Query Body (with transformed fields):', JSON.stringify(queryBody, null, 2));
 
           const result = await withRetry(async () => {
             const { data, error } = await lightdashClient.POST(
@@ -1039,11 +1192,14 @@ server.setRequestHandler(
               }
             );
             if (error) {
-              throw new Error(
-                `Lightdash API error: ${error.error.name}, ${
-                  error.error.message ?? 'no message'
-                }`
-              );
+              // DEBUG: Log the exact error from Lightdash API
+              console.log('🔍 DEBUG: Lightdash API error details:');
+              console.log('  Error object:', JSON.stringify(error, null, 2));
+              console.log('  Error name:', error.error?.name);
+              console.log('  Error message:', error.error?.message);
+              console.log('  Error data:', error.error?.data);
+              
+              throw new Error(createEnhancedErrorMessage(error));
             }
             return data;
           });

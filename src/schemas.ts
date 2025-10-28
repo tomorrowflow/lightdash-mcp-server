@@ -142,7 +142,7 @@ const FilterGroupSchema = z.object({
       fieldId: z.string(),
     }),
     operator: z.string(),
-    values: z.array(z.union([z.string(), z.number()])),
+    values: z.array(z.union([z.string(), z.number(), z.boolean()])),
   })).optional(),
   or: z.array(z.object({
     id: z.string(),
@@ -150,7 +150,7 @@ const FilterGroupSchema = z.object({
       fieldId: z.string(),
     }),
     operator: z.string(),
-    values: z.array(z.union([z.string(), z.number()])),
+    values: z.array(z.union([z.string(), z.number(), z.boolean()])),
   })).optional(),
 });
 
