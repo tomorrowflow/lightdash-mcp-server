@@ -12,9 +12,9 @@ This server provides MCP-compatible access to Lightdash's API, allowing AI assis
 
 ## Features
 
-This server provides comprehensive access to Lightdash's API with **19 tools**, **4 resources**, and **3 guided prompts** for AI-driven data analysis.
+This server provides comprehensive access to Lightdash's API with **27 tools**, **4 resources**, and **4 guided prompts** for AI-driven data analysis and chart intelligence.
 
-### 🛠️ Available Tools (19 total)
+### 🛠️ Available Tools (27 total)
 
 #### Core Data Analysis Tools (Enhanced)
 - `lightdash_run_underlying_data_query` - **Execute queries against explores and return actual data results** ⭐ *Most Critical*
@@ -43,6 +43,20 @@ This server provides comprehensive access to Lightdash's API with **19 tools**, 
 - `lightdash_get_charts_as_code` - Get charts as code for a project
 - `lightdash_get_dashboards_as_code` - Get dashboards as code for a project
 
+#### 🧠 Chart Intelligence & Analysis Tools (Phase 1)
+- `lightdash_analyze_chart_performance` - **Comprehensive chart performance analysis** with load times, query complexity, and optimization recommendations
+- `lightdash_extract_chart_patterns` - **Advanced pattern recognition** in chart configurations, usage analytics, and design trends
+- `lightdash_discover_chart_relationships` - **Intelligent relationship mapping** between charts, dashboards, and data dependencies
+
+#### ⚡ Query Optimization & Benchmarking Tools (Phase 2)
+- `lightdash_optimize_query_performance` - **AI-powered query optimization** with performance analysis and improvement recommendations
+- `lightdash_benchmark_chart_performance` - **Comprehensive performance benchmarking** with statistical analysis and comparative metrics
+
+#### 🤖 AI-Powered Recommendation Tools (Phase 3)
+- `lightdash_generate_chart_recommendations` - **AI-powered chart recommendations** based on analytical goals and data characteristics
+- `lightdash_auto_optimize_dashboard` - **Automated dashboard optimization** using AI-driven analysis of layout and performance
+- `lightdash_create_smart_templates` - **Intelligent template generation** that learns from organizational patterns and best practices
+
 ### 📚 MCP Resources (4 total)
 
 URI-based read-only access to Lightdash data using the custom `lightdash://` protocol:
@@ -52,13 +66,14 @@ URI-based read-only access to Lightdash data using the custom `lightdash://` pro
 - `lightdash://dashboards/{dashboardUuid}` - **Dashboard structure** and tiles configuration
 - `lightdash://charts/{chartUuid}` - **Saved chart configuration** and metadata
 
-### 📝 MCP Prompts (3 total)
+### 📝 MCP Prompts (4 total)
 
 Guided workflow templates for common analysis patterns:
 
 - `analyze-metric` - **Guided metric analysis workflow** - analyze a specific metric with dimensions and filters
 - `find-and-explore` - **Discover and analyze data workflow** - find relevant data and suggest analysis approach
 - `dashboard-deep-dive` - **Comprehensive dashboard analysis workflow** - analyze all tiles in a dashboard
+- `intelligent-chart-advisor` - **🤖 AI-powered conversational interface** for interactive chart creation guidance with contextual recommendations
 
 ### 🚀 Key Capabilities
 
@@ -69,6 +84,29 @@ Guided workflow templates for common analysis patterns:
 - 🎯 **Guided workflows** - AI-friendly templates for common analysis patterns
 - 🔗 **URI-based access** - Direct data access via custom protocol
 - 📈 **Leverage existing work** - Access saved charts and dashboards created by analysts
+- 🧠 **Chart Intelligence** - Advanced performance analysis, pattern recognition, and relationship discovery
+- ⚡ **Query Optimization** - AI-powered performance optimization and benchmarking
+- 🤖 **AI Recommendations** - Intelligent chart suggestions, dashboard optimization, and smart templates
+- 💬 **Conversational AI** - Interactive guidance for chart creation with contextual recommendations
+
+### 🌟 Chart Intelligence & Optimization Platform
+
+This server includes a comprehensive **Chart Intelligence & Optimization Platform** with advanced AI capabilities:
+
+#### **Phase 1: Chart Analysis & Intelligence**
+- **Performance Analysis** - Deep insights into chart load times, query complexity, and optimization opportunities
+- **Pattern Recognition** - Advanced analysis of chart configurations, usage patterns, and design trends
+- **Relationship Discovery** - Intelligent mapping of dependencies between charts, dashboards, and data sources
+
+#### **Phase 2: Query Optimization & Benchmarking**
+- **AI-Powered Optimization** - Automated query performance analysis with actionable improvement recommendations
+- **Statistical Benchmarking** - Comprehensive performance metrics with comparative analysis and trend tracking
+
+#### **Phase 3: AI-Powered Recommendations**
+- **Intelligent Chart Recommendations** - AI analyzes your analytical goals and data characteristics to suggest optimal chart configurations
+- **Automated Dashboard Optimization** - AI-driven analysis of dashboard layout, performance, and user experience with implementation plans
+- **Smart Template Generation** - Learning from organizational patterns to create adaptive, context-aware chart templates
+- **Conversational AI Interface** - Interactive guidance through 5-phase workflow for chart creation and optimization
 
 ## Quick Start
 
@@ -231,11 +269,13 @@ The HTTP transport includes several security enhancements:
 
 The project includes a comprehensive test suite that validates:
 
-- **All 19 MCP tools**: Ensures each tool responds correctly with proper data
+- **All 27 MCP tools**: Ensures each tool responds correctly with proper data
 - **4 MCP resources**: Tests URI-based data access with `lightdash://` protocol
-- **3 MCP prompts**: Validates guided workflow template generation
+- **4 MCP prompts**: Validates guided workflow template generation
 - **Query execution**: Tests actual data querying with nested response parsing
 - **Intelligent discovery**: Validates catalog search and schema retrieval
+- **Chart Intelligence**: Tests performance analysis, pattern recognition, and relationship discovery
+- **AI Recommendations**: Validates chart recommendations, dashboard optimization, and smart templates
 - **HTTP and Stdio transports**: Tests both communication methods
 - **Security features**: Validates CORS and host validation
 - **Performance**: Checks response times and concurrent handling
@@ -253,13 +293,19 @@ npm test
 npm run test:query        # Test query execution tools
 npm run test:resources    # Test MCP resources and prompts
 npm run test:discovery    # Test catalog search and schema tools
+npm run test:intelligence # Test chart intelligence and AI tools
+npm run test:phase1       # Test Phase 1 chart analysis tools
+npm run test:phase2       # Test Phase 2 optimization tools
+npm run test:phase3       # Test Phase 3 AI recommendation tools
 ```
 
 The tests will automatically start a test server, run all validations, and provide a detailed report of results including:
-- ✅ **19 tools** validated with real Lightdash API calls
+- ✅ **27 tools** validated with real Lightdash API calls
 - ✅ **4 resources** tested with URI parsing and data access
-- ✅ **3 prompts** verified with template generation
+- ✅ **4 prompts** verified with template generation
 - ✅ **Query execution** confirmed with nested response parsing
+- ✅ **Chart Intelligence** validated with performance analysis and pattern recognition
+- ✅ **AI Recommendations** tested with intelligent suggestions and optimization
 - ✅ **Error handling** validated with proper MCP error codes
 
 ### Contributing

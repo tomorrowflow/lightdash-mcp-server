@@ -1,0 +1,131 @@
+{
+  "totalTests": 20,
+  "passed": 15,
+  "failed": 5,
+  "warnings": 2,
+  "errors": [
+    {
+      "test": "Security: CORS configuration",
+      "category": "security",
+      "error": "this.results.warnings.push is not a function"
+    },
+    {
+      "test": "Performance: Concurrent request handling",
+      "category": "performance",
+      "error": "Concurrent request failure rate 4.00% too high"
+    },
+    {
+      "test": "Performance: Resource cleanup and garbage collection",
+      "category": "performance",
+      "error": "Simulated failure for lightdash_extract_chart_patterns"
+    },
+    {
+      "test": "Scalability: Memory usage scaling",
+      "category": "scalability",
+      "error": "Simulated failure for lightdash_create_smart_templates"
+    },
+    {
+      "test": "Deployment: Environment configuration",
+      "category": "deployment",
+      "error": "this.results.warnings.push is not a function"
+    }
+  ],
+  "categories": {
+    "security": {
+      "tests": 4,
+      "passed": 3,
+      "failed": 1
+    },
+    "performance": {
+      "tests": 4,
+      "passed": 2,
+      "failed": 2
+    },
+    "reliability": {
+      "tests": 4,
+      "passed": 4,
+      "failed": 0
+    },
+    "scalability": {
+      "tests": 2,
+      "passed": 1,
+      "failed": 1
+    },
+    "monitoring": {
+      "tests": 3,
+      "passed": 3,
+      "failed": 0
+    },
+    "deployment": {
+      "tests": 3,
+      "passed": 2,
+      "failed": 1
+    }
+  },
+  "metrics": {
+    "performance": {
+      "lightdash_list_projects": 1152,
+      "lightdash_get_catalog_search": 780,
+      "lightdash_run_underlying_data_query": 468,
+      "lightdash_generate_chart_recommendations": 980,
+      "lightdash_auto_optimize_dashboard": 834,
+      "lightdash_create_smart_templates": 542,
+      "Performance: Response time benchmarks": 4758,
+      "memoryUsage": -621248,
+      "Performance: Memory usage limits": 1184,
+      "loadTesting": [
+        {
+          "load": 5,
+          "duration": 1109,
+          "successCount": 5,
+          "avgResponseTime": 221.8,
+          "successRate": 1
+        },
+        {
+          "load": 10,
+          "duration": 1079,
+          "successCount": 10,
+          "avgResponseTime": 107.9,
+          "successRate": 1
+        },
+        {
+          "load": 20,
+          "duration": 1117,
+          "successCount": 19,
+          "avgResponseTime": 55.85,
+          "successRate": 0.95
+        },
+        {
+          "load": 30,
+          "duration": 1174,
+          "successCount": 30,
+          "avgResponseTime": 39.13333333333333,
+          "successRate": 1
+        }
+      ]
+    },
+    "security": {
+      "Security: Input validation and sanitization": 1789,
+      "Security: Error information disclosure": 264,
+      "Security: Rate limiting protection": 1195
+    },
+    "reliability": {
+      "Reliability: Error recovery and resilience": 4450,
+      "Reliability: Timeout handling": 1928,
+      "Reliability: Data consistency and integrity": 4435,
+      "Reliability: Graceful degradation under load": 1198
+    },
+    "scalability": {
+      "Scalability: Load testing with increasing requests": 4482
+    },
+    "monitoring": {
+      "Monitoring: Health check endpoint": 417,
+      "Monitoring: Error logging and tracking": 923,
+      "Monitoring: Performance metrics collection": 733
+    },
+    "deployment": {
+      "Deployment: Build and distribution readiness": 2,
+      "Deployment: Documentation completeness": 1
+    }
+  }
+}
